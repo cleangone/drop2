@@ -1,0 +1,4 @@
+{
+   // set to false - true looks for typing in variables
+  "vetur.experimental.templateInterpolationService": false
+}
