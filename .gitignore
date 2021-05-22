@@ -8,6 +8,7 @@ node_modules
 
 # Dropzone specific
 /src/boot/Config.js
+/src/boot/algoliaConfig.js
 /src/boot/firebaseConfig.js
 /.firebase
 .firebaserc

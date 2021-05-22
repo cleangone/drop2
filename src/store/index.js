@@ -13,6 +13,7 @@ import error    from './error-store'
 import install  from './install-store'
 import invoice  from './invoice-store'
 import item     from './item-store'
+import search   from './search-store'
 import setting  from './setting-store'
 import sms      from './sms-store'
 import tag      from './tag-store'
@@ -34,6 +35,7 @@ export default function () {
          install,
          invoice,
          item,
+         search,
          setting,
          sms,
          tag,

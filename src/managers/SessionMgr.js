@@ -25,6 +25,7 @@ export class SessionMgr {
    static setRecentItemsDesc()           { SessionMgr.setRouteItemsDesc(Route.RECENT) }
    static setCurrentDesc()               { SessionMgr.setRouteItemsDesc(Route.CURRENT) }
    static setActivityDesc()              { SessionMgr.setRouteItemsDesc(Route.ACTIVITY) }
+   static setSearchDesc()                { SessionMgr.setRouteItemsDesc(Route.SEARCH) }
    static setFavoriteItemsDesc()         { SessionMgr.setRouteItemsDesc(Route.FAVORITE) }
    static setRouteItemsDesc(route)       { SessionMgr.setDisplayItemsDesc({ route: route, name: route }) }
    
@@ -37,5 +38,6 @@ export class SessionMgr {
    static isRecent(displayItemsDesc)    { return displayItemsDesc.route == Route.RECENT }
    static isCurrent(displayItemsDesc)   { return displayItemsDesc.route == Route.CURRENT }
    static isActivity(displayItemsDesc)  { return displayItemsDesc.route == Route.ACTIVITY }
-   static isFavorite(displayItemsDesc)  { return displayItemsDesc.route == Route.FAVORITE }
+   static isRoute(displayItemsDesc, route)  { return displayItemsDesc.route == route }
+   
 }

@@ -17,6 +17,7 @@ export const Route = {
    CURRENT:   'Current Activity',
    ACTIVITY:  'Activity',
    FAVORITE:  'Favorites',
+   SEARCH:    'Search',
    LOGIN:     'Login',
    REGISTER:  'Register',
    FORGOT:    'Forgot Password',
@@ -43,6 +44,7 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.1.0  - 5/21/21",  // Initial search - Algolia integration, search header and page
    "v2.0.0  - 5/19/21",  // Created new drop2 app (quasar 1.15.15, quasar/app 2.2.6) and ported codebase
                          // Created new drop2 git repo so old /dropzone could still be deployed as fallback
                          // icon genie now creates icons in top level /public folder

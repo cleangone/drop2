@@ -16,6 +16,7 @@ const routes = [
          createRoute('/bids/:itemId',        'BidsPage'),
          createRoute('/recent',              'RecentItemsPage',          Route.RECENT),
          createRoute('/cart',                'CartPage',                 Route.CART),
+         createRoute('/search',              'SearchPage',               Route.SEARCH),
          createRoute('/install',             'InstallPage'),
          createRoute('/current',             'User/CurrentActivityPage', Route.CURRENT),
          createRoute('/activity',            'User/ActivityPage',        Route.ACTIVITY),

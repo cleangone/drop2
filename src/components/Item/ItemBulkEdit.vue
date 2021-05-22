@@ -104,7 +104,6 @@
                if (this.saleType.length) { update.saleType = this.saleType }
                if (this.artist) { update.category = CategoryMgr.isNone(this.artist) ? null : this.artist }
 
-
                if (selectedTags) { 
                   update.tags = []
                   if (item.tags) {
@@ -117,6 +116,7 @@
                   }
                   update.tags.sort((a, b) => (a.sortName < b.sortName) ? -1 : 1)
                   update.tagIds = TagMgr.getTagIdArray(update.tags)
+                  update.tagNames = TagMgr.getTagNameArray(update.tags)
                }
 
                if (Object.keys(update).length) { 

@@ -61,6 +61,16 @@ export class TagMgr {
 
    static getTagIdArray(tags) { return Array.from(TagMgr.getTagIds(tags)) }
 
+   static getTagNameArray(tags) { 
+      let names = []
+      if (tags) {
+         for (var tag of tags) {
+            names.push(tag.name)
+         }
+      }
+      return names 
+   }
+
    static getTags(uiTags) { 
       if (!uiTags) { return [] }
 

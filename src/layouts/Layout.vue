@@ -20,6 +20,16 @@
                </q-menu>
             </q-btn>        
             <q-btn v-else icon-right="account_circle" :to="loginPage" :label="loginDisplay" dense flat />
+            
+            <q-btn icon="search" @click="searchString=''; showSearch=true" flat dense />
+            <div style="height:30px">
+               <q-menu v-model="showSearch" content-class="bg-white">
+                  <div class="q-pa-xs row">
+                  <q-input label="Search" v-model="searchString" @keydown.enter.prevent="search()" autofocus autogrow dense errorfilled /> 
+                  <q-btn label="Search" @click="search()" color="primary" class="q-ml-xs" />
+                  </div>
+               </q-menu>
+            </div>
             <q-btn v-if="showCart" icon="shopping_cart" to="/cart" dense flat >
                <q-badge v-if="cartItemsExist" color="blue" floating>{{cartItemCount}}</q-badge>
             </q-btn>
@@ -95,6 +105,8 @@
 
 <script>
    import { mapGetters, mapActions } from 'vuex'
+   import algoliasearch from 'algoliasearch/lite'
+   import { AlgoliaConfig } from 'boot/algoliaConfig.js'
    import { LocalStorageMgr, InstallStatus } from 'src/managers/storage/LocalStorageMgr'
    import { Route, Versions } from 'src/utils/Constants'
    
@@ -110,6 +122,9 @@
             unboundCartItemIds: [],
             cancelledAlertIds: [],
             showAdminFooter: true,
+            showSearch: false,
+            searchIndex: null,
+            searchString: ""
          }
       },
       computed: {
@@ -120,7 +135,7 @@
          ...mapGetters('current', ['currentActivityExists']),
          ...mapGetters('error', ['visibleEmailErrorsExist']),
          ...mapGetters('invoice', ['invoicesExist']),
-         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist']),
+         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist', 'getItems']),
          ...mapGetters('user', ['getUser', 'isAdmin']),
          ...mapGetters('install', ['canInstallApp', 'installStatusExists', 'getInstallStatus']),
          drawerMini() { return this.$q.platform.is.mobile ? false : (!this.drawerLockedOpen && !this.drawerMouseover) },
@@ -219,6 +234,7 @@
          ...mapActions('category',['bindCategories']),         
          ...mapActions('invoice', ['bindInvoices', 'bindUserInvoices', 'unbindUserInvoices']),
          ...mapActions('item',    ['bindItems', 'bindRecentItems']),
+         ...mapActions('search',  ['setSearchStart', 'setSearchResults']),         
          ...mapActions('setting', ['bindSettings']),
          ...mapActions('tag',     ['bindTags']),
          ...mapActions('user',    ['bindUsers']),
@@ -245,6 +261,28 @@
             this.logoutUser()
             if (this.$route.path != "/") { this.$router.push("/") }
          },
+         search() {
+            this.showSearch = false
+            if (!this.searchString || !this.searchString.length ) { return }
+            
+            this.setSearchStart(this.searchString)
+            this.searchIndex.search(this.searchString)
+               .then((responses) => {
+                  const itemIds = []
+                  if (responses.hits) {
+                      for (var hit of responses.hits) {
+                        itemIds.push(hit.objectID)
+                     }
+                  }
+                  const items = this.getItems(itemIds)
+                  items.sort((a, b) => (a.sortName < b.sortName) ? -1 : 1)
+                  this.setSearchResults(items) 
+               })
+
+            if (this.$route.name != Route.SEARCH) {
+               this.$router.push("/search")
+            }
+         }
       },
       created() {
          if (this.$q.platform.is.mobile) { this.showDrawer = false }
@@ -256,6 +294,9 @@
          this.bindTags()
          this.bindUsers()
 
+         const searchClient = algoliasearch(AlgoliaConfig.appId, AlgoliaConfig.searchKey)
+         this.searchIndex = searchClient.initIndex(AlgoliaConfig.index);
+            
          // local storage for device-specific state, store for async responsivness 
          this.setInstallStatus(LocalStorageMgr.getAppInstall())
          window.addEventListener('beforeinstallprompt', (e) => {

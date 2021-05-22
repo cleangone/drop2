@@ -83,10 +83,6 @@
 		methods: {
          ...mapActions('item', ['setItem']),
          save() {
-
-            // todo - setting caching here just a test
-            StorageMgr.setImageCacheControl(this.item)
-
 				if (ItemMgr.isSetup(this.itemToSubmit) || ItemMgr.isAvailable(this.itemToSubmit)) {
                this.itemToSubmit.buyPrice = 0 
                this.itemToSubmit.buyDate = 0 
@@ -115,6 +111,7 @@
             }
             this.itemToSubmit.tags.sort((a, b) => (a.sortName < b.sortName) ? -1 : 1)
             this.itemToSubmit.tagIds = TagMgr.getTagIdArray(this.itemToSubmit.tags)
+            this.itemToSubmit.tagNames = TagMgr.getTagNameArray(this.itemToSubmit.tags)
 
             // delete prev primaryImage files if they have changed
             if (this.isEdit) {
