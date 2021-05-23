@@ -7,10 +7,10 @@
          </div>
 			<div v-else-if="showItems" class="row q-mt-xs" style="height: 20px">
             <toggle :toggleContainer="showItemsToggleContainer" class="q-mr-md"/>
-            <toggle :toggleContainer="sortByToggleContainer" />
+            <toggle :toggleContainer="sortItemsToggleContainer" />
          </div>
          <div v-if="showItems" class="row q-mt-sm q-gutter-sm">
-				<item v-for="(item, key) in displayItems" :key="key" :item="item" />
+				<item v-for="(item, key) in sortedItems" :key="key" :item="item" />
 			</div>
          <div v-else class="q-mt-sm" style="max-width:500px">
 				<q-img :src="drop.imageUrl ? drop.imageUrl : 'statics/image-placeholder.png'"  basic contain>
@@ -29,22 +29,16 @@
    import { DropMgr } from 'src/managers/DropMgr'
 	import { ItemMgr } from 'src/managers/ItemMgr'
    import { SessionMgr } from 'src/managers/SessionMgr'
+   import { ToggleContainerMgr } from 'src/managers/ui/ToggleContainerMgr'
    import { formatTodayOr_ddd_MMM_D_h_mm } from 'src/utils/DateUtils'
-   import { getShowItemsToggleContainer, isShowItemsAll } from 'src/utils/Utils'
-   
-   const SORT_BY_NAME = "name"
-   const SORT_BY_DATE = "date"
    
 	export default {
 		data() {
 			return {				
 				dropId: 0,
             adminView: false,
-            showItemsToggleContainer: {},
-            sortByToggleContainer: {
-               model: SORT_BY_NAME, 
-               options: [{ label: 'Sort by Name', value: SORT_BY_NAME }, { label: 'Sort by Most Recent Updated', value: SORT_BY_DATE }],
-            }
+            showItemsToggleContainer: ToggleContainerMgr.getShowItemsContainer(),
+            sortItemsToggleContainer: ToggleContainerMgr.getSortItemsFullContainer()
          }
 		},
 	  	computed: {
@@ -57,7 +51,7 @@
          isCountdown() { return DropMgr.isCountdown(this.drop) },
          user() { return this.getUser(this.userId) },
          isAdmin() { return this.user && this.user.isAdmin },
-         visibleItems() { 
+         visibleItems() { // sep fm displayItems because item state more stable than ui viewing
             const visibleItems = []
             const items = this.getItemsInDrop(this.dropId) 
             items.forEach(item => { 
@@ -65,19 +59,26 @@
 		      })
             return visibleItems
          },
-         sortedItems() { 
-            if (this.sortByToggleContainer.model == SORT_BY_NAME) { return this.visibleItems }
-            
-            const sortedItems = [...this.visibleItems]
-            sortedItems.sort((a, b) => (a.userUpdatedDate > b.userUpdatedDate) ? -1 : 1)
-            return sortedItems
-         },
          displayItems() { 
+            return ToggleContainerMgr.isShowItemsAll(this.showItemsToggleContainer) ? 
+               this.visibleItems : ItemMgr.getAvailable(this.visibleItems)
+         },
+         sortedItems() { 
+            const sortedItems = [...this.displayItems]
+            if (ToggleContainerMgr.isSortItemsByDate(this.sortItemsToggleContainer)) { 
+               sortedItems.sort((a, b) => (a.userUpdatedDate > b.userUpdatedDate) ? -1 : 1)
+            }
+            else if (ToggleContainerMgr.isSortItemsByPriceHighest(this.sortItemsToggleContainer)) { 
+               sortedItems.sort((a, b) => (a.startPrice > b.startPrice) ? -1 : 1)
+            }
+            else if (ToggleContainerMgr.isSortItemsByPriceLowest(this.sortItemsToggleContainer)) { 
+               sortedItems.sort((a, b) => (a.startPrice < b.startPrice) ? -1 : 1)
+            }
+            
             SessionMgr.setDropItemsDesc("Drop", this.dropId) 
-            const displayItems = isShowItemsAll(this.showItemsToggleContainer) ? 
-               this.sortedItems : ItemMgr.getAvailable(this.sortedItems)
-            return SessionMgr.setDisplayItems(displayItems)
-			},
+            return SessionMgr.setDisplayItems(sortedItems)
+         },
+         
          showItems() { return DropMgr.isActive(this.drop) || (this.adminView && DropMgr.isPreDrop(this.drop)) },
          startDateText() { return this.drop.startDate ? formatTodayOr_ddd_MMM_D_h_mm(this.drop.startDate) : "Date not set" },
 		},
@@ -85,7 +86,6 @@
 		},
       created() {
          this.dropId = this.$route.params.id   
-         this.showItemsToggleContainer = getShowItemsToggleContainer()
       },
 		components: {
 	  	   'drop-timer' : require('components/Drop/DropTimer.vue').default,

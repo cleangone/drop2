@@ -4,7 +4,7 @@
          <q-checkbox v-model="showInProcess" label="In-process" class="text-grey-10"         color="grey-10" dense/>
          <q-checkbox v-model="showWon"       label="Won"        class="q-ml-sm text-grey-10" color="grey-10" dense/>
          <q-checkbox v-model="showLost"      label="Lost"       class="q-ml-sm text-grey-10" color="grey-10" dense/>
-         <toggle :toggleContainer="sortByToggleContainer" class="q-ml-md"/>
+         <toggle :toggleContainer="sortItemsToggleContainer" class="q-ml-md"/>
       </div>
       <div class="row q-mt-sm q-gutter-sm">
          <item v-for="(item, key) in sortedItems" :key="key" :item="item" />
@@ -16,9 +16,7 @@
 	import { mapGetters } from 'vuex'
    import { ItemMgr } from 'src/managers/ItemMgr'
    import { SessionMgr } from 'src/managers/SessionMgr'
-	
-   const SORT_BY_NAME = "name"
-   const SORT_BY_DATE = "date"
+   import { ToggleContainerMgr } from 'src/managers/ui/ToggleContainerMgr'
    
 	export default {
       props: ['beginDate', 'route' ],       
@@ -27,10 +25,7 @@
             showInProcess: true,
             showWon: true,
             showLost: false,
-            sortByToggleContainer: {
-               model: SORT_BY_NAME, 
-               options: [{ label: 'Sort by Name', value: SORT_BY_NAME }, { label: 'Sort by Date', value: SORT_BY_DATE }],
-            }
+            sortItemsToggleContainer: ToggleContainerMgr.getSortItemsContainer()
          }
       },
 		computed: {
@@ -61,7 +56,9 @@
             return displayItems
          },
          sortedItems() { 
-            if (this.sortByToggleContainer.model == SORT_BY_NAME) { return SessionMgr.setDisplayItems(this.displayItems) }
+            if (ToggleContainerMgr.isSortItemsByName(this.sortItemsToggleContainer)) { 
+               return SessionMgr.setDisplayItems(this.displayItems) 
+            }
 
             const sortedItems = [...this.displayItems]
             sortedItems.sort((a, b) => (a.userUpdatedDate > b.userUpdatedDate) ? -1 : 1)

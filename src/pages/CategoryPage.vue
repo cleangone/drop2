@@ -35,10 +35,9 @@
 <script>
    import { mapGetters } from 'vuex'
    import { ItemMgr } from 'src/managers/ItemMgr'
-   import { TagMgr } from 'src/managers/TagMgr'
    import { SessionMgr } from 'src/managers/SessionMgr'
+   import { ToggleContainerMgr } from 'src/managers/ui/ToggleContainerMgr'
    import { Colors } from 'src/utils/Constants'
-   import { getShowItemsToggleContainer, isShowItemsAll } from 'src/utils/Utils'
    
    // items grouped by their tags on the page, with Recent added to the Top, and General to the bottom
    const RECENT_ITEMS_TAG_ID = "0"
@@ -51,7 +50,7 @@
             initialExpandedTagId: RECENT_ITEMS_TAG_ID, 
             showVideo: false,
             showDescriptionExtended: false,
-            showItemsToggleContainer: {},
+            showItemsToggleContainer: ToggleContainerMgr.getShowItemsContainer()
         }
 		},
 	  	computed: {
@@ -63,7 +62,8 @@
          items() { return this.getActiveItemsWithCategory(this.categoryId) },
          displayItems() { 
             SessionMgr.setCategoryItemsDesc(this.category.name, this.categoryId)             
-            return (isShowItemsAll(this.showItemsToggleContainer) ? this.items : ItemMgr.getAvailable(this.items))
+            return (ToggleContainerMgr.isShowItemsAll(this.showItemsToggleContainer) ? 
+               this.items : ItemMgr.getAvailable(this.items))
          },
          recentItems() { 
             let recentItems = ItemMgr.getRecent(this.displayItems)
@@ -121,7 +121,6 @@
       created() {
          this.categoryId = this.$route.params.id         
          if (this.$route.params.tagId) { this.initialExpandedTagId = this.$route.params.tagId }
-         this.showItemsToggleContainer = getShowItemsToggleContainer()
       },
 		components: {
 	  	   'tag-items' : require('components/Tag/TagItems.vue').default,

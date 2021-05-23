@@ -52,9 +52,9 @@
                <div v-else-if="userHasRequested" class="text-bold">You have requested</div>                
                <div v-else-if="isDropping">
                   <item-timer :item="item" :tagId="tagId"/>
-                  <div v-if="userIsHighBidder" class="text-bold bg-green q-px-xs">You are High Bidder</div>
-                  <div v-if="userHasHigherMax" class="text-bold bg-green q-px-xs">Max bid {{ userMaxBid }}</div>
-                  <div v-if="userIsOutbid"     class="text-bold bg-red-5 q-px-xs">You have been outbid</div> 
+                  <div v-if="userIsHighBidder" :class="classHighBidder">You are High Bidder</div>
+                  <div v-if="userHasHigherMax" :class="classHighBidder">Max bid {{ userMaxBid }}</div>
+                  <div v-if="userIsOutbid"     :class="classOutbid">You have been outbid</div> 
                </div> 
 				</q-card-section>	
             <div v-if="isAvailable || (userIsAdmin && isSetup)" style="height:25px"/> <!-- spacer for actions when expanded -->
@@ -96,9 +96,9 @@
                <div v-else-if="userHasRequested" class="text-bold">You have requested</div>                
                <div v-else-if="isDropping">
                   <item-timer :item="item"/>
-                  <div v-if="userIsHighBidder" class="text-bold bg-green q-px-xs">You are High Bidder</div>
-                  <div v-if="userHasHigherMax" class="text-bold bg-green q-px-xs">Max bid {{ userMaxBid }}</div>
-                  <div v-if="userIsOutbid"     class="text-bold bg-red-5 q-px-xs">You have been outbid</div> 
+                  <div v-if="userIsHighBidder" :class="classHighBidder">You are High Bidder</div>
+                  <div v-if="userHasHigherMax" :class="classHighBidder">Max bid {{ userMaxBid }}</div>
+                  <div v-if="userIsOutbid"     :class="classOutbid">You have been outbid</div> 
                </div> 
                <div v-if="hasDescription" class="text-grey-8" v-html="item.description" />
             </q-card-section>	
@@ -116,6 +116,13 @@
 	import { ItemDisplayType, SaleType, Route, Colors } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
    
+   const BgColors = {
+      AVAILABLE:'bg-grey-3', // used for full image page
+      DROPPING: 'bg-yellow',
+      SOLD:     'bg-grey-7',
+      BUYER:    'bg-green',
+      OUTBID:   'bg-red-5',
+   }
 	export default {
       props: ['item', 'displayType', 
          'prev', 'next', // used when displaying full image
@@ -162,15 +169,17 @@
             if (width > this.$q.screen.width - 100) { width = this.$q.screen.width - 100 }
             return width
          },	
+         classHighBidder() { return "text-bold q-px-xs " + BgColors.BUYER },
+         classOubtid() { return "text-bold q-px-xs" + BgColors.OUTBID },
          textBgColor() {
 				if (this.isSetup) { return "bg-grey" }
-				else if (this.isNotAvailable) { return (this.userIsBuyer || this.userIsHighBidder ? "bg-green" : "bg-red-5") }
-            else if (this.isDropping) { return "bg-yellow" }
+				else if (this.isNotAvailable) { return (this.userIsBuyer || this.userIsHighBidder ? BgColors.BUYER : BgColors.SOLD) }
+            else if (this.isDropping) { return BgColors.DROPPING }
             else { return "" }
          },
          textFullBgColor() {
             const color = this.textBgColor
-            return color == "" ? "bg-grey-3" : color
+            return color == "" ? BgColors.AVAILABLE : color
          },
          hasArtist() { return this.artist.length > 0 },
          artist() { return CategoryMgr.categoryName(this.item) },
@@ -191,8 +200,8 @@
          },
 			priceTextMini() { return this.buildPriceText("") + (this.isDropping && this.hasBids ? " (" + this.bidText + ")" : "") },
 			priceTextBgColor() { 
-				if (this.isDropping && this.userIsHighBidder)  { return "bg-green" }
-				else if (this.isDropping && this.userIsOutbid) { return "bg-red-5" }
+				if (this.isDropping && this.userIsHighBidder)  { return BgColors.BUYER }
+				else if (this.isDropping && this.userIsOutbid) { return BgColors.SOLD }
 				else  {return "" }
          },
          hasBids() { return this.item.numberOfBids && this.item.numberOfBids > 0 },

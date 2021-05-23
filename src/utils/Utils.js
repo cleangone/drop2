@@ -1,6 +1,4 @@
 import { uid } from 'quasar'
-import { SessionMgr } from 'src/managers/SessionMgr'
-import { UI } from './Constants'
 import { format_MM_DD_YY } from './DateUtils'
 
 export function isSwipeLeft(swipeInfo) {return swipeInfo.direction == "left" }
@@ -30,21 +28,6 @@ export function unformatPhone(phone) {
 export function dateUid() {
    return format_MM_DD_YY(new Date().getTime()) + "-" +  uid()
 }
-
-export function getShowItemsToggleContainer() {   
-   const toggleContainer = {
-      model: UI.SHOW_ALL, 
-      options: [ { label: 'Show All', value: UI.SHOW_ALL }, { label: 'Show Available', value: UI.SHOW_AVAILABLE } ],
-      sessionKey: "ShowItemsModel",
-   }
-
-   const model = SessionMgr.get(toggleContainer.sessionKey)
-   if (model != null) { toggleContainer.model = model }
-
-   return toggleContainer
-}
-
-export function isShowItemsAll(toggleContainer) { return toggleContainer.model == UI.SHOW_ALL }
 
 export function shallowEquals(object1, object2) {
    const keys1 = Object.keys(object1);

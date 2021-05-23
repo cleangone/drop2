@@ -1,6 +1,6 @@
 <template>
   <q-page>
-      <div class="q-pt-md q-pl-md text-h6">Purchase Requests - {{ item.name }} {{acceptedRequestId}}</div>
+      <div class="q-pt-md q-pl-md text-h6">Purchase Requests - {{ item.name }}</div>
 		<div class="row">
          <div class="q-pa-sm" :class="'width: ' + itemDivWidth">
             <item :item="item" :displayType="displayType" class="q-pa-sm col-2"/>

@@ -36,14 +36,13 @@ export const RequestProcessing = {
 }
 
 export const UI = {
-   CLOSE:    'close',
-   EDIT:     'edit',
-   NONE:     '(none)',
-   SHOW_ALL: 'all',
-   SHOW_AVAILABLE: 'available',
+   CLOSE:     'close',
+   EDIT:      'edit',
+   NONE:      '(none)',
 }
 
 export const Versions = [
+   "v2.1.2  - 5/23/21",  // Sort search results by name/date/price, refactor ToggleComtainer
    "v2.1.1  - 5/22/21",  // Redeploy icons - sep set for browsers and apple home screens
    "v2.1.0  - 5/21/21",  // Initial search - Algolia integration, search header and page
    "v2.0.0  - 5/19/21",  // Created new drop2 app (quasar 1.15.15, quasar/app 2.2.6) and ported codebase

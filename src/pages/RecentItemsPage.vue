@@ -15,27 +15,23 @@
    import { mapGetters  } from 'vuex'
    import { ItemMgr } from 'src/managers/ItemMgr'
    import { SessionMgr } from 'src/managers/SessionMgr'
-   import { getShowItemsToggleContainer, isShowItemsAll } from 'src/utils/Utils'
-   
+   import { ToggleContainerMgr } from 'src/managers/ui/ToggleContainerMgr'   
+
 	export default {
 		data() {
 			return {				
-				showItemsToggleContainer: {},
+				showItemsToggleContainer: ToggleContainerMgr.getShowItemsContainer(),
         }
 		},
 	  	computed: {
 			...mapGetters('item', ['itemsExist', 'getRecentItems']),
 			displayItems() { 
             SessionMgr.setRecentItemsDesc() 
-            const displayItems = isShowItemsAll(this.showItemsToggleContainer) ? this.getRecentItems : ItemMgr.getAvailable(this.getRecentItems)
+            const displayItems = ToggleContainerMgr.isShowItemsAll(this.showItemsToggleContainer) ? 
+               this.getRecentItems : ItemMgr.getAvailable(this.getRecentItems)
             return SessionMgr.setDisplayItems(displayItems)
 			},
       },
-		methods: {
-		},
-      created() {
-         this.showItemsToggleContainer = getShowItemsToggleContainer()
-		},
 		components: {
          'item' : require('components/Item/Item.vue').default,
          'toggle' : require('components/General/Toggle.vue').default,
