@@ -18,7 +18,7 @@
                <q-input v-model="itemToSubmit.sortName" label="Sort Name" filled />
                <q-select v-model="uiTags" label="Tags" :options="uiTagOptions" multiple filled />
                <q-img v-if="!uploaderDisplayed" style="height: 200px; width: 200px;" class="q-ml-sm" :class="pink" contain
-                  :src="itemToSubmit.primaryImage.url ? itemToSubmit.primaryImage.url : 'statics/image-placeholder.png'" />
+                  :src="itemToSubmit.primaryImage.url ? itemToSubmit.primaryImage.url : 'image-placeholder.png'" />
                <div v-if="!uploaderDisplayed">
                   <q-checkbox v-model="itemToSubmit.primaryImage.isHorizontal" label="Horizontal"  dense/>
                   <q-btn @click="uploaderDisplayed=true" label="Upload Image" class="float-right" color="primary" />

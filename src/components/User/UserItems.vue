@@ -1,10 +1,10 @@
 <template>
 	<div>
       <div>  
-         <q-checkbox v-model="showInProcess" label="In-process" class="text-grey-10"         color="grey-10" dense/>
-         <q-checkbox v-model="showWon"       label="Won"        class="q-ml-sm text-grey-10" color="grey-10" dense/>
-         <q-checkbox v-model="showLost"      label="Lost"       class="q-ml-sm text-grey-10" color="grey-10" dense/>
-         <toggle :toggleContainer="sortItemsToggleContainer" class="q-ml-md"/>
+         <q-checkbox v-model="showInProcess" label="In-process" class="q-mr-sm text-grey-10" color="grey-10" dense/>
+         <q-checkbox v-model="showWon"       label="Won"        class="q-mr-sm text-grey-10" color="grey-10" dense/>
+         <q-checkbox v-model="showLost"      label="Lost"       class="q-mr-md text-grey-10" color="grey-10" dense/>
+         <toggle :toggleContainer="sortItemsToggleContainer" />
       </div>
       <div class="row q-mt-sm q-gutter-sm">
          <item v-for="(item, key) in sortedItems" :key="key" :item="item" />

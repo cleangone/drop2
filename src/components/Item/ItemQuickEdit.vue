@@ -10,7 +10,7 @@
             <q-input v-model="item.sortName"          label="Sort Name"                    filled class="col" />
             <q-input v-model.number="item.startPrice" label="Price" type=number prefix="$" filled class="col" />
          </div>
-         <q-img :src="item.primaryImage.thumbUrl ? item.primaryImage.thumbUrl : 'statics/image-placeholder.png'" 
+         <q-img :src="item.primaryImage.thumbUrl ? item.primaryImage.thumbUrl : 'image-placeholder.png'" 
             style="height: 200px; width: 200px" class="col q-ml-lg" :class="purple" contain />
       </div> 
    </q-card-section>

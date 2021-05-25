@@ -1,19 +1,23 @@
 <template>
 	<q-page class="q-pa-md b-pink">
 		<div v-if="drop">
-			<div class="row q-mt-sm text-h5">{{ drop.name }}</div>
+			<div class="row q-mt-sm text-h5">
+            {{ drop.name }}
+            <q-btn v-if="isAdmin" icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary" />
+            <div v-if="isAdmin">
+               <q-btn label="Items" :to="'/admin/dropitems/' + dropId" color="primary" size="xs" dense no-caps/>
+            </div>
+         </div>
          <div v-if="adminViewingPreDrop" class="row q-mt-none">
             <q-checkbox v-model="adminView" label="Admin Item View" class="text-grey-7" color="grey-10" dense />
          </div>
-			<div v-else-if="showItems" class="row q-mt-xs" style="height: 20px">
-            <toggle :toggleContainer="showItemsToggleContainer" class="q-mr-md"/>
-            <toggle :toggleContainer="sortItemsToggleContainer" />
-         </div>
+         <multiple-toggle v-else-if="showItems" 
+            :toggleContainer1="showItemsToggleContainer" :toggleContainer2="sortItemsToggleContainer" />   
          <div v-if="showItems" class="row q-mt-sm q-gutter-sm">
 				<item v-for="(item, key) in sortedItems" :key="key" :item="item" />
 			</div>
          <div v-else class="q-mt-sm" style="max-width:500px">
-				<q-img :src="drop.imageUrl ? drop.imageUrl : 'statics/image-placeholder.png'"  basic contain>
+				<q-img :src="drop.imageUrl ? drop.imageUrl : 'image-placeholder.png'"  basic contain>
                <drop-timer v-if="isCountdown" :drop="drop"/>
                <div v-else class="absolute-bottom text-h6">Drops: {{ startDateText }}</div>
 				</q-img>
@@ -21,6 +25,9 @@
 			</div>
 		</div>
 		<div v-else>Loading</div>
+      <q-dialog v-model="showEditDropModal">
+         <drop-add-edit :type="edit" :drop="drop" @close="showEditDropModal=false" />
+		</q-dialog>
 	</q-page>
 </template>
 
@@ -30,6 +37,7 @@
 	import { ItemMgr } from 'src/managers/ItemMgr'
    import { SessionMgr } from 'src/managers/SessionMgr'
    import { ToggleContainerMgr } from 'src/managers/ui/ToggleContainerMgr'
+   import { UI } from 'src/utils/Constants'
    import { formatTodayOr_ddd_MMM_D_h_mm } from 'src/utils/DateUtils'
    
 	export default {
@@ -38,7 +46,8 @@
 				dropId: 0,
             adminView: false,
             showItemsToggleContainer: ToggleContainerMgr.getShowItemsContainer(),
-            sortItemsToggleContainer: ToggleContainerMgr.getSortItemsFullContainer()
+            sortItemsToggleContainer: ToggleContainerMgr.getSortItemsFullContainer(),
+            showEditDropModal: false,
          }
 		},
 	  	computed: {
@@ -46,6 +55,7 @@
          ...mapGetters('user', ['getUser']),
 			...mapGetters('drop', ['getDrop']),
 			...mapGetters('item', ['getItemsInDrop']),
+         
 			adminViewingPreDrop() { return this.isAdmin && DropMgr.isPreDrop(this.drop) },
          drop() { return this.getDrop(this.dropId) },
          isCountdown() { return DropMgr.isCountdown(this.drop) },
@@ -81,6 +91,7 @@
          
          showItems() { return DropMgr.isActive(this.drop) || (this.adminView && DropMgr.isPreDrop(this.drop)) },
          startDateText() { return this.drop.startDate ? formatTodayOr_ddd_MMM_D_h_mm(this.drop.startDate) : "Date not set" },
+         edit() { return UI.EDIT }
 		},
 		methods: {
 		},
@@ -90,8 +101,9 @@
 		components: {
 	  	   'drop-timer' : require('components/Drop/DropTimer.vue').default,
          'item' : require('components/Item/Item.vue').default,
-	  	   'toggle' : require('components/General/Toggle.vue').default,
-	  	}
+	  	   'multiple-toggle' : require('components/General/MultipleToggle.vue').default,
+         'drop-add-edit' : require('components/Drop/DropAddEdit.vue').default,
+      }
 	}
 
 </script>

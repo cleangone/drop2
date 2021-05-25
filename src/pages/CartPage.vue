@@ -60,6 +60,7 @@
 <script>
    import { mapGetters, mapActions  } from 'vuex'
    import { UserMgr } from 'src/managers/UserMgr'
+   import { SessionMgr } from 'src/managers/SessionMgr'
    import { ItemDisplayType, Route } from 'src/utils/Constants'
    import { isValidEmailAddress } from 'src/utils/EmailUtils'
    
@@ -81,7 +82,10 @@
          cartItemsExist() { return this.cartSize > 0 },
          cartItems() { 
             let items = this.getItems(this.getCartItemIds)
-            return items.sort((a,b) => a.sortName.localeCompare(b.sortName))
+            items.sort((a,b) => a.sortName.localeCompare(b.sortName))
+
+            SessionMgr.setRouteItemsDesc(Route.CART)
+            return SessionMgr.setDisplayItems(items)
          },
          loginPage() { return "/auth/login/" + Route.CART },
          anonUserUpdated() { 

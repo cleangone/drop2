@@ -1,19 +1,18 @@
 <template>
   <div>     
       <div class="row q-pl-sm q-pr-sm" :class="purple">
-         <span class="col text-subtitle1 heading" :class="yellow" >{{ heading }}</span>
-         <span class="col text-grey-10 text-center" color="grey-10" :class="red">
-			   <q-checkbox v-if="dropId"     v-model="showCols.category" label="Artist"    @input="showColsChecked()" dense />
-            <q-checkbox v-if="categoryId" v-model="showCols.drop"     label="Drop"      @input="showColsChecked()" dense />
-            <q-checkbox                   v-model="showCols.tags"     label="Tags"      @input="showColsChecked()" dense class="q-ml-sm" />
-            <q-checkbox                   v-model="showCols.saleType" label="Sale Type" @input="showColsChecked()" dense class="q-ml-sm" />
-            <q-checkbox                   v-model="showCols.buyer"    label="Buyer"     @input="showColsChecked()" dense class="q-ml-sm" />
-            <q-checkbox                   v-model="showCols.bidreq"   label="Bid/Req"   @input="showColsChecked()" dense class="q-ml-sm" />
+         <span class="col text-grey-10" color="grey-10" :class="red">
+			   <q-checkbox v-if="dropId"     v-model="showCols.category" label="Artist"  @input="showColsChecked()" size="xs" dense />
+            <q-checkbox v-if="categoryId" v-model="showCols.drop"     label="Drop"    @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.tags"       label="Tags"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.saleType"   label="Sale Type" @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.buyer"      label="Buyer"     @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.bidreq"     label="Bid/Req"   @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
          </span>
          <span class="col text-grey-10 text-right" color="grey-10" :class="red">
-			   <q-checkbox  v-model="showItems.available" label="Available" @input="showItemsChecked()" dense />
-            <q-checkbox  v-model="showItems.hold"      label="On Hold"   @input="showItemsChecked()" dense class="q-ml-sm" />
-            <q-checkbox  v-model="showItems.sold"      label="Sold"      @input="showItemsChecked()" dense class="q-ml-sm" />
+			   <q-checkbox v-model="showItems.available" label="Available" @input="showItemsChecked()" size="xs" dense />
+            <q-checkbox v-model="showItems.hold"      label="On Hold"   @input="showItemsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showItems.sold"      label="Sold"      @input="showItemsChecked()" size="xs" dense class="q-ml-sm" />
          </span>
 		</div>
 		<div class="q-mt-xs absolute full-width full-height" :class="green">
@@ -46,12 +45,12 @@
 			</q-table>
 
          <div class="q-mt-md"> 
-			   <q-btn v-if="!rowsSelected"       @click="showAddModal=true"       icon="add"                unelevated color="primary"/>
+			   <q-btn v-if="!rowsSelected"       @click="showAddModal=true"       icon="add"                unelevated color="primary" class="q-ml-sm"/>
             <q-btn v-if="!rowsSelected"       @click="showBulkAddModal=true"   label="Bulk Add"          unelevated color="primary" class="q-ml-xs"/>
-            <q-btn v-if="showSortDatesButton" @click="showSortDatesModal=true" label="Sort Create Dates" unelevated color="primary" class="q-mr-xs"/>
-            <q-btn v-if="showInvoiceButton"   @click="showInvoiceModal=true"   label="Create Invoice"    unelevated color="primary" class="q-mr-xs"/>
-            <q-btn v-if="showBulkEditButton"  @click="showBulkEditModal=true"  label="Bulk Edit"         unelevated color="primary" class="q-mr-xs"/>
-            <q-btn v-if="showQuickEditButton" @click="showQuickEditModal=true" label="Quick Edit"        unelevated color="primary"/>
+            <q-btn v-if="showSortDatesButton" @click="showSortDatesModal=true" label="Sort Create Dates" unelevated color="primary" class="q-ml-sm"/>
+            <q-btn v-if="showInvoiceButton"   @click="showInvoiceModal=true"   label="Create Invoice"    unelevated color="primary" class="q-ml-sm"/>
+            <q-btn v-if="showBulkEditButton"  @click="showBulkEditModal=true"  label="Bulk Edit"         unelevated color="primary" class="q-ml-sm"/>
+            <q-btn v-if="showQuickEditButton" @click="showQuickEditModal=true" label="Quick Edit"        unelevated color="primary" class="q-ml-xs"/>
          </div> 
          <div style="height: 75px"/>
 		</div>
@@ -92,7 +91,7 @@
    const SHOW_ITEMS = 'ItemsAdminShowItemStatus'
          
 	export default {
-      props: ['heading', 'items', 'dropId', 'categoryId'], // one of dropId/categoryId will be set
+      props: ['items', 'dropId', 'categoryId'], // one of dropId/categoryId will be set
 		data() {
 	  		return {
             showCols: {},

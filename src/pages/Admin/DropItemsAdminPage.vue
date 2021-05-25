@@ -1,10 +1,12 @@
 <template>
   <q-page>
       <div class="q-pt-sm q-px-sm text-h6 heading" :class="blue">
-         Drop: {{ drop.name }}  
+         <div>Drop Items Admin</div>
+         <router-link :to="'/drop/' + dropId">{{ drop.name }}</router-link> 
+         <span class="text-subtitle1"> ({{ heading }}) </span>
          <q-btn icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary" />
       </div>
-		<items-admin :dropId="dropId" :items="items" :heading="heading" class="full-width full-height" :class="orange"/>
+		<items-admin :dropId="dropId" :items="items" class="full-width full-height" :class="orange"/>
       <q-dialog v-model="showEditDropModal">
          <drop-add-edit :type="edit" :drop="drop" @close="showEditDropModal=false" />
 		</q-dialog>
@@ -31,8 +33,7 @@
  			drop() { return this.getDrop(this.dropId) },
          heading() { 
             return this.drop.status + 
-               (DropMgr.isSetup(this.drop) || DropMgr.isScheduled(this.drop) ? ", " + formatDateTimeOptYear(this.drop.startDate) : "") + 
-               ", Default Sale Type: " + this.drop.defaultSaleType 
+               (DropMgr.isSetup(this.drop) || DropMgr.isScheduled(this.drop) ? ", " + formatDateTimeOptYear(this.drop.startDate) : "")
          },         
          items() { return this.getItemsInDrop(this.dropId) },
          edit() { return UI.EDIT }

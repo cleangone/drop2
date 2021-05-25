@@ -17,7 +17,7 @@
                <q-select label="Status" v-model="categoryToSubmit.status" :options="statusOptions" filled />
             </div>
             <div class="col q-gutter-sm" :class="orange">
-               <q-img v-if="!uploaderDisplayed" :src="categoryToSubmit.primaryImage.url ? categoryToSubmit.primaryImage.url : 'statics/image-placeholder.png'"
+               <q-img v-if="!uploaderDisplayed" :src="categoryToSubmit.primaryImage.url ? categoryToSubmit.primaryImage.url : 'image-placeholder.png'"
                      style="height: 160px; width: 260px" class="q-ml-sm" contain />
                <q-btn v-if="!uploaderDisplayed" @click="uploaderDisplayed=true" label="Upload Image" class="float-right" color="primary" />
     	      </div>

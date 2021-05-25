@@ -1,7 +1,7 @@
 <template>
   <q-page>
       <div class="q-pt-sm q-px-sm text-h6 heading" :class="blue">{{ category.name }}</div>
-		<items-admin :categoryId="categoryId" :items="items" heading="" class="full-width full-height" :class="orange"/>
+		<items-admin :categoryId="categoryId" :items="items" class="full-width full-height" :class="orange"/>
   	</q-page>
 </template>
 

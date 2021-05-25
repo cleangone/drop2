@@ -42,14 +42,14 @@ const actions = {
       collection().doc(error.id).set(error)
    }),
    hideEmailError: firestoreAction((context, errorId) => {
-      emailCollection().doc(errorId).update({ isHidden: true })
+      emailCollection().doc(errorId).update({ isVisible: false })
    })
 }
 
 const getters = {
    visibleEmailErrorsExist: state => { 
       for (var emailError of state.emailErrors) {
-         if (!emailError.isHidden) { return true }
+         if (emailError.isVisible) { return true }
       }
       return false
    },
@@ -57,7 +57,7 @@ const getters = {
    getVisibleEmailErrors: state => { 
       let visible = []
       for (var emailError of state.emailErrors) {
-         if (!emailError.isHidden) { visible.push(emailError) }
+         if (emailError.isVisible) { visible.push(emailError) }
       }
       return visible
    },

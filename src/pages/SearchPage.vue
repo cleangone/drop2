@@ -5,10 +5,7 @@
          <q-input label="Search" v-model="searchString" @keydown.enter.prevent="search()" autofocus autogrow dense filled /> 
          <q-btn label="Search" @click="search()" color="primary" class="q-ml-xs"/>
       </div>
-      <div class="row q-mt-sm">
-         <toggle :toggleContainer="showItemsToggleContainer" />   
-         <toggle :toggleContainer="sortItemsToggleContainer" class="q-ml-md"/>
-      </div> 
+      <multiple-toggle :toggleContainer1="showItemsToggleContainer" :toggleContainer2="sortItemsToggleContainer" /> 
       <div v-if="isSearching">Searching</div>
       <div v-else>
          <div v-if="searchResultsExist" class="row q-mt-sm q-gutter-sm">
@@ -89,7 +86,7 @@
       },
 		components: {
 	  		'item' : require('components/Item/Item.vue').default,
-         'toggle' : require('components/General/Toggle.vue').default,
+         'multiple-toggle' : require('components/General/MultipleToggle.vue').default,
       },
 	}
 </script>

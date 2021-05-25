@@ -4,11 +4,8 @@
 			<q-card v-if="hasImageUrl" class="q-pt-xs q-px-xs" style="min-height: 260px;" :class="textBgColor">				
 				<item-thumb :item="item" :image="image" vImageWidth="125" hImageWidth="262" imageMaxHeight="200" :tagId="tagId"/>
 				<q-card-section class="text-caption q-pa-xs" :class="purple">
-					<div style="line-height: 1.25em" :class="orange">
-                  <span>{{ item.name }}</span>
-                  <span v-if="hasArtist && this.image.isHorizontal" class="float-right">{{artist}}</span>
-               </div>
-               <div v-if="hasArtist && !this.image.isHorizontal" style="line-height: 1.5em" class="q-ma-none q-pa-none"> {{artist}} </div>
+               <div style="line-height: 1.25em" class="text-weight-bold" :class="orange">{{ item.name }}</div>
+               <div v-if="hasArtist" style="line-height: 1.5em" class="q-ma-none q-pa-none">{{ artist }}</div>
                <div v-if="priceTextBgColor" :class="priceTextBgColor" class="text-bold q-px-xs">{{ priceTextMini }}</div>	
 					<div v-else :class="blue">{{ priceTextMini }}</div>	
 					<item-timer v-if="isDropping" :item="item"/>
@@ -19,11 +16,8 @@
 			<q-card v-if="hasImageUrl" class="q-pt-xs q-px-xs" style="min-height: 260px;" :class="textBgColor">				
 				<item-thumb :item="item" :image="image" vImageWidth="125" hImageWidth="262" imageMaxHeight="200" :tagId="tagId"/>
 				<q-card-section class="text-caption q-pa-xs" :class="purple">
-					<div style="line-height: 1.25em" :class="orange">
-                  <span>{{ item.name }}</span>
-                  <span v-if="hasArtist && this.image.isHorizontal" class="float-right">{{artist}}</span>
-               </div>
-               <div v-if="hasArtist && !this.image.isHorizontal" style="line-height: 1.5em" class="q-ma-none q-pa-none"> {{artist}} </div>
+					<div style="line-height: 1.25em" class="text-weight-bold" :class="orange">{{ item.name }}</div>
+               <div v-if="hasArtist" style="line-height: 1.5em" class="q-ma-none q-pa-none">{{ artist }}</div>
                <div v-if="priceTextBgColor" :class="priceTextBgColor" class="text-bold q-px-xs">{{ priceTextMini }}</div>	
 					<div v-else :class="blue">{{ priceTextMini }}</div>	
 				</q-card-section>	
@@ -38,11 +32,8 @@
 			<q-card v-if="hasImageUrl" class="q-pt-xs q-px-xs" style="min-height: 320px;" :class="textBgColor">
 				<item-thumb :item="item" :image="image" vImageWidth="150" hImageWidth="316" imageMaxHeight="250" :tagId="tagId"/>
 				<q-card-section class="text-caption q-px-xs q-pt-xs q-pb-none" :class="purple">
-					<div style="line-height: 1.25em" :class="orange">
-                  <span class="text-weight-bold">{{ item.name }}</span>
-                  <span v-if="hasArtist && this.image.isHorizontal" class="float-right">{{artist}}</span>
-               </div>
-               <div v-if="hasArtist && !this.image.isHorizontal" style="line-height: 1.5em" :class="pink"> {{artist}} </div>
+					<div style="line-height: 1.25em" class="text-weight-bold" :class="orange">{{ item.name }}</div>
+               <div v-if="hasArtist" style="line-height: 1.5em" :class="pink">{{ artist }}</div>
                <div style="line-height: 1.5em" :class="indigo">
                   {{ priceText }}
                   <span v-if="hasBids && displayIsThumb"> - <a :href="'#/bids/' + item.id">{{ bidText }}</a></span>
@@ -150,6 +141,7 @@
             else if (SessionMgr.isActivity(this.itemsCollection))  { return { name: Route.ACTIVITY } }
             else if (SessionMgr.isRoute(this.itemsCollection, Route.SEARCH))   { return { name: Route.SEARCH } }
             else if (SessionMgr.isRoute(this.itemsCollection, Route.FAVORITE)) { return { name: Route.FAVORITE } }
+            else if (SessionMgr.isRoute(this.itemsCollection, Route.CART))     { return { name: Route.CART } }
             else if (SessionMgr.isDrop(this.itemsCollection))      { return { name: Route.DROP, params: { id: this.itemsCollection.id } } }
             else if (SessionMgr.isCategory(this.itemsCollection))  { 
                const tagId = SessionMgr.getCategoryTag()
@@ -161,7 +153,7 @@
 			image() { return this.item.primaryImage }, 
          hasImageUrl() { return (this.image.url ? true : false) },
 			hasDescription() { return this.item.description && this.item.description.length },
-			imageUrl() { return this.image.url ? this.image.url : 'statics/image-placeholder.png' },
+			imageUrl() { return this.image.url ? this.image.url : 'image-placeholder.png' },
 			imageWidth() { return ("width: " + (this.image.isHorizontal ? this.hImageWidth : this.vImageWidth)) },		
          imageFullWidth() { 
             // todo - doesn't factor in layout drawer open 

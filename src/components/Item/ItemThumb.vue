@@ -30,7 +30,7 @@
          popupStyle() { 
             // console.log("popupStyle", this.mouse, this.page)
             const popupWidth = this.image.isHorizontal ? 500 : 350
-            const xPos = this.mouse.x + 75 + popupWidth < this.page.w ? 
+            let xPos = this.mouse.x + 75 + popupWidth < this.page.w ? 
                this.mouse.x + 75 : // x pos to right of cursor if space
                this.mouse.x - 20 - popupWidth  // or to left with room for popup
             
@@ -41,6 +41,11 @@
             else if (yPct < 50) { yPos = this.mouse.y - 50 } // 2nd - popup slightly above cursor
             // else if (yPct < 75) { yPos = this.mouse.y - avgThumbH/2 - 20 } // 3rd - popup centered at cursor
             else { yPos = this.page.h - avgThumbH - 150 } // bottom - popup completely visible
+
+            if (xPos < 0) { // handle corner case of small screen
+               xPos = 10 // popup should not start off of page
+               yPos = this.mouse.y + 20 // popup needs to not overlap mouse
+            }
 
             return  "width: " + popupWidth +  "px; left: " + xPos + "px; top: " + yPos + "px;"
          },

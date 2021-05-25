@@ -34,7 +34,7 @@
                   </q-icon>
                   </template>
                </q-input>
-               <q-img v-if="!uploaderDisplayed" :src="dropToSubmit.imageUrl ? dropToSubmit.imageUrl : 'statics/image-placeholder.png'"
+               <q-img v-if="!uploaderDisplayed" :src="dropToSubmit.imageUrl ? dropToSubmit.imageUrl : 'image-placeholder.png'"
                   style="height: 160px; width: 260px" class="q-ml-sm" contain />
                <q-btn v-if="!uploaderDisplayed" @click="uploaderDisplayed=true" label="Upload Image" class="float-right" color="primary" />
     	      </div>

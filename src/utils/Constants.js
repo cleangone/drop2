@@ -42,6 +42,7 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.1.3  - 5/25/21",  // Streamline Drop editing. Update toggles, popup image for small screens.  
    "v2.1.2  - 5/23/21",  // Sort search results by name/date/price, refactor ToggleComtainer
    "v2.1.1  - 5/22/21",  // Redeploy icons - sep set for browsers and apple home screens
    "v2.1.0  - 5/21/21",  // Initial search - Algolia integration, search header and page
