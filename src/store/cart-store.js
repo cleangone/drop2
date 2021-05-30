@@ -13,6 +13,7 @@ import { Notify } from 'quasar'
 const state = {
    userId: {},
    userCarts: [], // one per user
+   // cart: {}
 }
 
 const mutations = {
@@ -23,11 +24,19 @@ const actions = {
    bindUserCarts: firestoreAction(({ bindFirestoreRef, commit }, userId) => {
       // console.log("bindUserCarts", userId)
       bindFirestoreRef('userCarts', collection().where('userId', '==', userId)) 
+
+      // bindFirestoreRef('cart', collection().doc(userId))
+
       commit('setUserId', userId) 
    }),
+
+
+
    unbindUserCarts: firestoreAction(({ unbindFirestoreRef }) => {
       unbindFirestoreRef('userCarts')
+      // unbindFirestoreRef('cart')
    }),
+
    addItemIdToCart({ state }, itemId) { 
       console.log("addItemIdToCart", itemId)
       // console.log("addItemIdToCart: " + state.userCarts.length + " carts")
@@ -46,6 +55,9 @@ const actions = {
       }
       showPositiveNotify("Item added to cart")
    },
+
+
+
    addItemIdsToCart({ state }, itemIds) { 
       // console.log("addItemIdsToCart", itemIds)
       // console.log("addItemIdsToCart: " + state.userCarts.length + " carts")

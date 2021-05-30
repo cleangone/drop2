@@ -40,4 +40,23 @@ export function shallowEquals(object1, object2) {
    }
  
    return true
- }
+}
+
+export function getIds(objects) {
+   const ids = []
+   for (const obj of objects) { 
+      ids.push(obj.id) 
+   }
+   return ids   
+}
+
+export function syncRows(row, rows) {
+   for (var i=0; i<rows.length; i++) {
+      if (rows[i].id == row.id ) { 
+         rows.splice(i, 1)
+         return
+      }
+   }
+   
+   rows.push(row)       
+}

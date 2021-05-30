@@ -29,7 +29,7 @@
          }
       },
 		methods: {
-			...mapActions('item', ['updateItem']),
+			...mapActions('item', ['updateItemImages']),
 			uploadCompleted(emit) {
             const sortName = emit.name.includes(".") ? emit.name.substring(0, emit.name.indexOf(".")) : emit.name
             const image = {
@@ -46,7 +46,7 @@
          save() {
             if (this.imagesToAdd.length) {
                const images = this.currImages.concat(this.imagesToAdd)
-               this.updateItem({ id: this.itemId, images: images }) 
+               this.updateItemImages({ id: this.itemId, images: images }) 
             }
             this.$emit(UI.CLOSE)
          },

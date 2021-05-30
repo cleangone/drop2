@@ -84,7 +84,7 @@
          },
       },
 		methods: {
-			...mapActions('item', ['updateItem']),
+			...mapActions('item', ['updateItemImages']),
          edit(image) {
             this.imageToEdit = image
             this.showEditModal = true
@@ -99,7 +99,7 @@
             this.images.forEach(currImage => {
                if (currImage.filePath != image.filePath) { remainingImages.push(currImage) }
             })
-            this.updateItem({ id: this.itemId, images: remainingImages })
+            this.updateItemImages({ id: this.itemId, images: remainingImages })
          },
 		},
 		components: {

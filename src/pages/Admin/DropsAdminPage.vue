@@ -53,7 +53,7 @@
 				showEditModal: false,
 				dropIdToEdit: '',
 				tableDataFilter: '',
-				visibleColumns: [ 'name', 'startDate', 'home', 'status', 'items', 'saleType', 'actions'],
+				visibleColumns: [ 'name', 'startDate', 'home', 'status', 'items', 'actions'],
  				columns: [
                //  todo - headerStyle doesn't seem to work - use it to center header
         			{ name: 'id', field: 'id' },
@@ -63,7 +63,6 @@
 					{ name: 'home',      label: 'Home Page',  align: 'center', field: 'homeGroup',       sortable: true },
                { name: 'status',    label: 'Status',     align: 'center', field: 'status',          sortable: true },
 					{ name: 'items',     label: 'Items',      align: 'center' },
-					{ name: 'saleType',  label: 'Type',       align: 'center', field: 'defaultSaleType', sortable: true },
 					{ name: 'actions' }
             ],
             pagination: { rowsPerPage: 30 },

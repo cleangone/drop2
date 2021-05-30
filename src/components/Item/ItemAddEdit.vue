@@ -46,10 +46,10 @@
    import { mapGetters, mapActions } from 'vuex'
    import { CategoryMgr, CATEGORY_NONE } from 'src/managers/CategoryMgr'
    import { ImageMgr } from 'src/managers/ImageMgr'
-   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
+   import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
    import { TagMgr } from 'src/managers/TagMgr'
    import { StorageMgr } from 'src/managers/StorageMgr'
-   import { SaleType, UI, Colors } from 'src/utils/Constants'
+   import { UI, Colors } from 'src/utils/Constants'
    
 	export default {
       props: ['type', 'item', 'dropId', 'categoryId'], // one of dropId/categoryId will be specified for add
@@ -61,13 +61,15 @@
                status: ItemStatus.SETUP,
 					startPrice: 0,
 					buyPrice: 0,
-					saleType: SaleType.DEFAULT,
+					saleType: ItemSaleType.BUY,
                primaryImage: { isHorizontal: false },
             },
             uiTags: null,
             uploaderDisplayed: false,
-				statusOptions: [ ItemStatus.PRIVATE, ItemStatus.SETUP, ItemStatus.AVAILABLE, ItemStatus.DROPPING, ItemStatus.HOLD, ItemStatus.SOLD ],
-            saleTypeOptions: [ SaleType.DEFAULT, SaleType.BID, SaleType.BUY ],
+				statusOptions: [ 
+               ItemStatus.PRIVATE, ItemStatus.SETUP, ItemStatus.AVAILABLE, ItemStatus.DROPPING, 
+               ItemStatus.CLOSED, ItemStatus.HOLD, ItemStatus.SOLD ],
+            saleTypeOptions: [ ItemSaleType.BID, ItemSaleType.BUY, ItemSaleType.DROP ],
          }
       },
       computed: {

@@ -84,6 +84,9 @@
             else if (ToggleContainerMgr.isSortItemsByPriceLowest(this.sortItemsToggleContainer)) { 
                sortedItems.sort((a, b) => (a.startPrice < b.startPrice) ? -1 : 1)
             }
+            else {
+               sortedItems.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)  
+            }
             
             SessionMgr.setDropItemsDesc("Drop", this.dropId) 
             return SessionMgr.setDisplayItems(sortedItems)

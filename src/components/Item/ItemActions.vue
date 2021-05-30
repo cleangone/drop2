@@ -1,5 +1,5 @@
 <template>
-	<q-card-actions class="q-my-none q-px-none q-pb-xs q-pt-none" style="width: 100%" :class="blue">      
+	<q-card-actions class="q-my-none q-px-none q-pb-xs q-pt-none" style="width: 100%" :class="blue"> 
       <div v-if="isListed && loggedIn && !userHasRequested" class="row" style="width: 100%" :class="pink">
          <div class="col-6">
             <q-btn v-if="isBid"  @click="showBidModal=true" :label="purchaseAction" color="primary" :size="buttonSize" dense no-caps/>
@@ -19,8 +19,7 @@
       </div>
       <div v-else-if="isAdminSetup" class="row" style="width: 100%" :class="pink">
          <div class="col-6">
-            <q-btn v-if="isBid"      :label="purchaseAction" disable color="primary" :size="buttonSize" dense/>
-            <q-btn v-else-if="isBuy" :label="purchaseAction" disable color="primary" :size="buttonSize" dense/>
+            <q-btn v-if="isBid || isBuy" :label="purchaseAction" disable color="primary" :size="buttonSize" dense/>
          </div>
          <div class="col" align="right" :class="yellow">
             <q-btn v-if="isBuy" label="Add to Cart" disable color="primary" :size="buttonSize" dense no-caps/>
@@ -34,11 +33,11 @@
 
 <script>
 	import { mapGetters, mapActions } from 'vuex'
-   import { ItemMgr } from 'src/managers/ItemMgr.js'
-   import { DropMgr } from 'src/managers/DropMgr.js'
-   import { UserMgr } from 'src/managers/UserMgr.js'
+   import { ItemMgr, ItemSaleType } from 'src/managers/ItemMgr'
+   import { DropMgr } from 'src/managers/DropMgr'
+   import { UserMgr } from 'src/managers/UserMgr'
    import { SettingsMgr } from 'src/managers/SettingsMgr'
-   import { Route, ItemDisplayType, SaleType, Colors } from 'src/utils/Constants.js'
+   import { ItemDisplayType, Route, Colors } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
    
 	export default {
@@ -60,23 +59,24 @@
          isAdminSetup() { return this.userIsAdmin && ItemMgr.isSetup(this.item) },         
 			drop() { return this.getDrop(this.item.dropId) },
          itemSaleType() {  
-            let itemSaleType = (this.item.saleType == SaleType.DEFAULT ? this.drop.defaultSaleType : this.item.saleType)
-            if (DropMgr.isDropped(this.drop)) { itemSaleType = SaleType.BUY }
-            if (itemSaleType == SaleType.BID && this.item.numberOfBids == 0) {
+            let itemSaleType = this.item.saleType
+            // todo - reexamine this change to buy once drop has finished
+            if (DropMgr.isDropped(this.drop)) { itemSaleType = ItemSaleType.BUY }
+            if (itemSaleType == ItemSaleType.BID && this.item.numberOfBids == 0) {
                // todo - reexamine this - overly complicated
                const bidPeriodEndMillis = this.drop.startDate.seconds*1000 + this.setting.bidPeriod*60*1000
-               if (new Date().getTime() > bidPeriodEndMillis) { itemSaleType = SaleType.BUY }
+               if (new Date().getTime() > bidPeriodEndMillis) { itemSaleType = ItemSaleType.BUY }
             }
             return itemSaleType
          },
-         purchaseAction() { return this.itemSaleType == SaleType.BID ? this.itemSaleType : "Buy Now" },
+         purchaseAction() { return this.itemSaleType == ItemSaleType.BUY ? "Buy Now" : "Bid" },
          buttonSize() { return this.displayType == ItemDisplayType.FULL ? "md"  : "sm"  },        
          fontSize()   { return this.displayType == ItemDisplayType.FULL ? "1em" : ".65em"  },        
          user() { return this.getUser(this.userId)},
          userHasRequested() { return this.loggedIn && ItemMgr.isRequestedByUser(this.item, this.userId) },
          userIsAdmin() { return this.user && this.user.isAdmin },
-			isBid() { return this.itemSaleType == SaleType.BID && this.item.startPrice },
-			isBuy() { return this.itemSaleType == SaleType.BUY && this.item.startPrice },	
+			isBid() { return (this.itemSaleType == ItemSaleType.BID || this.itemSaleType == ItemSaleType.DROP) && this.item.startPrice },
+			isBuy() { return this.itemSaleType == ItemSaleType.BUY && this.item.startPrice },	
          loginPage() { return "/auth/login/" + Route.HOME },  // todo - update to be this page
       },
 		methods: {

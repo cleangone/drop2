@@ -11,9 +11,8 @@
 
 <script>
 	import { TouchSwipe } from 'quasar'
-   import { mapGetters, mapActions } from 'vuex'
-   import { ItemMgr } from 'src/managers/ItemMgr'
-	import { SessionMgr } from 'src/managers/SessionMgr'
+   import { mapGetters } from 'vuex'
+   import { SessionMgr } from 'src/managers/SessionMgr'
 	import { ItemDisplayType, Colors } from 'src/utils/Constants'
 	import { isSwipeLeft, isSwipeRight } from 'src/utils/Utils'
 	
@@ -21,13 +20,18 @@
 		data() {
 			return {				
             itemId: "",
+            dropId: null,
          }
 		},
 	  	computed: {
-         ...mapGetters('item', ['itemsExist', 'getItem']),			
+         ...mapGetters('item', ['itemsExist', 'getItem', 'getItemInDrop']),			
 			...mapGetters('color', Colors),
 			displayTypeFull() { return ItemDisplayType.FULL },
-         item() { return this.getItem(this.itemId) },
+         item() { 
+            return this.dropId ? 
+               this.getItemInDrop(this.itemId, this.dropId) : 
+               this.getItem(this.itemId) 
+         },
          displayedItems() { 
             const itemsCollection = SessionMgr.getDisplayItemsDesc()
             if (SessionMgr.isCategory(itemsCollection)) {
@@ -54,8 +58,9 @@
          },
       },
 		methods: {
-         prev() { if (this.prevItem) { this.$router.push("/item/" + this.prevItem.id) } },
-         next() { if (this.nextItem) { this.$router.push("/item/" + this.nextItem.id) } },
+         prev() { if (this.prevItem) { this.$router.push("/item/" + this.prevItem.id + this.dropUrlParam(this.prevItem)) } },
+         next() { if (this.nextItem) { this.$router.push("/item/" + this.nextItem.id + this.dropUrlParam(this.nextItem)) } },
+         dropUrlParam(item) { return item.dropId ? "/" + item.dropId : "" },
          handleSwipe({ evt, ...info }) {
             if (isSwipeLeft(info)) { this.next() }
             else if (isSwipeRight(info)) { this.prev() }
@@ -69,9 +74,13 @@
       },
       created() {
          this.itemId = this.$route.params.itemId
+         this.dropId = this.$route.params.dropId ? this.$route.params.dropId : null
       },
       watch: {
-         $route() { this.itemId = this.$route.params.itemId }
+         $route() { 
+            this.itemId = this.$route.params.itemId 
+            this.dropId = this.$route.params.dropId ? this.$route.params.dropId : null
+         }
       },
 	}
 

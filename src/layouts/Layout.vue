@@ -47,7 +47,7 @@
             <layout-item v-if="currentUserActionsExist" primary :class="activeItemsClass"
                path="/current" label="Current Activity" iconName="fas fa-gavel" />
             <q-expansion-item v-model="artistsExpanded" label="Artists" icon="brush" expand-separator>
-               <layout-item v-for="(category, key) in getPublicCategories" :key="key" 
+               <layout-item v-for="(category, key) in categories" :key="key" 
                   :path="'/category/' + category.id" :label="category.name" 
                   :avatarImage="category.primaryImage ? category.primaryImage.thumbUrl : null" 
                   :topLabel="category.topLineName" :botLabel="category.bottomLineName"/>
@@ -106,9 +106,10 @@
 <script>
    import { mapGetters, mapActions } from 'vuex'
    import algoliasearch from 'algoliasearch/lite'
-   import { AlgoliaConfig } from 'boot/algoliaConfig.js'
+   import { AlgoliaConfig } from 'boot/algoliaConfig'
    import { LocalStorageMgr, InstallStatus } from 'src/managers/storage/LocalStorageMgr'
    import { Route, Versions } from 'src/utils/Constants'
+   import { getIds } from 'src/utils/Utils'
    
    export default {
       name: 'MyLayout',
@@ -133,6 +134,7 @@
          ...mapGetters('cart', ['cartSize', 'getCartItemIds']),
          ...mapGetters('category', ['getPublicCategories']),
          ...mapGetters('current', ['currentActivityExists']),
+         ...mapGetters('drop', ['getHomePageDrops']),
          ...mapGetters('error', ['visibleEmailErrorsExist']),
          ...mapGetters('invoice', ['invoicesExist']),
          ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist', 'getItems']),
@@ -178,7 +180,6 @@
                   }
                }, 2000) 
             }
-            
             return this.loggedIn
          },
          loginPage() { return "/auth/login/" + Route.HOME },
@@ -221,6 +222,18 @@
          },
          cartItemsExist() { return this.cartItemCount > 0 },
          cartItemCount() { return this.cartSize },
+         categories() { 
+            // piggyback drop binding 
+            const drops = this.getHomePageDrops
+            console.log('Layout: binding drops', drops)
+            if (drops.length) {
+               this.bindDropItems(getIds(drops)) // drop bind a no-op if already bound    
+            }
+
+            const categories = this.getPublicCategories
+            this.bindCategoryItems(getIds(categories)) // category binding a no-op if already bound
+            return categories
+         },
          showAppInstall() { return this.canInstallApp || this.installStatusExists },
          version() { return Versions[0] },
       },
@@ -233,7 +246,7 @@
          ...mapActions('error',   ['bindEmailErrors']),
          ...mapActions('category',['bindCategories']),         
          ...mapActions('invoice', ['bindInvoices', 'bindUserInvoices', 'unbindUserInvoices']),
-         ...mapActions('item',    ['bindItems', 'bindRecentItems']),
+         ...mapActions('item',    ['bindItems', 'bindCategoryItems', 'bindDropItems', 'bindRecentItems' ]),
          ...mapActions('search',  ['setSearchStart', 'setSearchResults']),         
          ...mapActions('setting', ['bindSettings']),
          ...mapActions('tag',     ['bindTags']),

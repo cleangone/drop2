@@ -34,9 +34,8 @@
 <script>
 	import { mapGetters, mapActions } from 'vuex'
 	import { CategoryMgr } from 'src/managers/CategoryMgr'
-   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
+   import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
    import { TagMgr } from 'src/managers/TagMgr'
-   import { SaleType } from 'src/utils/Constants'
    
 	export default {
       props: ['items'],
@@ -52,7 +51,7 @@
             saleType: "",
             deleteItems: false,
 				statusOptions: [ ItemStatus.PRIVATE, ItemStatus.SETUP, ItemStatus.AVAILABLE, ItemStatus.HOLD, ItemStatus.SOLD ],
-				saleTypeOptions: [ SaleType.DEFAULT, SaleType.BID, SaleType.BUY ]
+				saleTypeOptions: [ ItemSaleType.BID, ItemSaleType.BUY, ItemSaleType.DROP ]
 			}
       },
       computed: {

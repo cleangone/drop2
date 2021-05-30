@@ -30,7 +30,7 @@
       computed: { 
       },
 		methods: {
-			...mapActions('item', ['updateItem']),
+			...mapActions('item', ['updateItemImages']),
 			save() {
 				if (this.imageToUpdate.sortName != this.image.sortName) {
                const updatedImages = []
@@ -38,7 +38,7 @@
                   if (currImage.filePath == this.imageToUpdate.filePath) { updatedImages.push(this.imageToUpdate) }
                   else { updatedImages.push(currImage) }
                })
-               this.updateItem({ id: this.itemId, images: updatedImages })
+               this.updateItemImages({ id: this.itemId, images: updatedImages })
             }
 
             this.$emit(UI.CLOSE)

@@ -18,9 +18,9 @@
 	import { mapGetters, mapActions } from 'vuex'
    import { CategoryMgr } from 'src/managers/CategoryMgr'
    import { ImageMgr } from 'src/managers/ImageMgr'
-   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
+   import { ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
    import { StorageMgr } from 'src/managers/StorageMgr'
-	import { SaleType, UI } from 'src/utils/Constants'
+	import { UI } from 'src/utils/Constants'
    
 	export default {
       props: ['dropId', 'categoryId'],  // one of the two will be set
@@ -41,7 +41,7 @@
                name: itemName,
                sortName: itemName,
                status: ItemStatus.SETUP,
-               saleType: SaleType.DEFAULT,
+               saleType: ItemSaleType.BUY,
                primaryImage: { 
                   baseName: emit.name, 
                   isHorizontal: false, 

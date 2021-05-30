@@ -1,5 +1,5 @@
 <template>
-	<q-page class="q-pa-md">
+	<q-page v-if="category" class="q-pa-md">
       <div class="q-mt-sm text-h5" :class="orange">
          {{ category.name }}
          <q-btn v-if="category.video" icon="videocam" @click="showVideo=true" @click.stop size="md" flat dense color="primary" />
@@ -59,7 +59,10 @@
          ...mapGetters('color', Colors),
          category() { return this.getCategory(this.categoryId) },
          thumbExists() { return (this.category && this.category.primaryImage && this.category.primaryImage.thumbUrl) },
-         items() { return this.getActiveItemsWithCategory(this.categoryId) },
+         items() { 
+            const items = this.getActiveItemsWithCategory(this.categoryId) 
+            return items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
+         },
          displayItems() { 
             SessionMgr.setCategoryItemsDesc(this.category.name, this.categoryId)             
             return (ToggleContainerMgr.isShowItemsAll(this.showItemsToggleContainer) ? 

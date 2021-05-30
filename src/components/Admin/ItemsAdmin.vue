@@ -11,6 +11,7 @@
          </span>
          <span class="col text-grey-10 text-right" color="grey-10" :class="red">
 			   <q-checkbox v-model="showItems.available" label="Available" @input="showItemsChecked()" size="xs" dense />
+            <q-checkbox v-model="showItems.live"      label="Live"      @input="showItemsChecked()" size="xs" dense class="q-ml-sm" />
             <q-checkbox v-model="showItems.hold"      label="On Hold"   @input="showItemsChecked()" size="xs" dense class="q-ml-sm" />
             <q-checkbox v-model="showItems.sold"      label="Sold"      @input="showItemsChecked()" size="xs" dense class="q-ml-sm" />
          </span>
@@ -234,8 +235,11 @@
       },
       created() {
          this.showCols = SessionStorage.getItem(SHOW_COLS)    
-         if (!this.showCols) { this.showCols = { 
-            category: true, drop: true, tags: true, saleType: true, buyer: true, bidreq: true } }
+         if (!this.showCols) { 
+            this.showCols = { 
+               category: true, drop: true, tags: true, saleType: true, buyer: true, bidreq: true 
+            } 
+         }
       
          this.showItems = SessionStorage.getItem(SHOW_ITEMS)    
          if (!this.showItems) { this.showItems = { 

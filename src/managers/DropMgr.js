@@ -1,4 +1,3 @@
-
 /*
    drop
       id
@@ -6,7 +5,6 @@
       name
       description
       startDate
-      defaultSaleType
       imageUrl
 */
 

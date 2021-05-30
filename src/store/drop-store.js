@@ -1,15 +1,21 @@
 import { firestoreAction } from 'vuexfire'
 import { firestore } from 'boot/firebase'
-import { DropMgr } from 'src/managers/DropMgr'
+import { DropMgr, HomeGroup } from 'src/managers/DropMgr'
 import { dateUid } from 'src/utils/Utils'
 
 const state = {
 	drops: [],
+   primaryDrops: [],
+   secondaryDrops: [],
 }
 
 const actions = {
    bindDrops: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef('drops', collection())
+      const promises = []
+      promises.push(bindFirestoreRef('drops', collection()))
+      promises.push(bindFirestoreRef('secondaryDrops', collection().where('homeGroup', '==', HomeGroup.SECONDARY)))
+      promises.push(bindFirestoreRef('primaryDrops',   collection().where('homeGroup', '==', HomeGroup.PRIMARY)))
+      return Promise.all(promises)
    }),
    createDrop: firestoreAction((context, drop) => {
       console.log("createDrop", drop)
@@ -45,10 +51,13 @@ const getters = {
       return false
    },
    getDrops: state => { 
-      const drops = [...state.drops];
+      const drops = [...state.drops]
       drops.sort((a, b) => (a.startDate < b.startDate) ? -1 : 1)
       return drops
    },
+   getPrimaryDrops: state => { return [...state.primaryDrops] },
+   getSecondaryDrops: state => { return [...state.secondaryDrops] },
+   getHomePageDrops: state => { return state.primaryDrops.concat(state.secondaryDrops) },
    getDrop: state => dropId => {
       for (var drop of state.drops) {
          if (drop.id == dropId) { return drop }

@@ -24,7 +24,6 @@
 
 <script>
 	import { mapGetters, mapActions } from 'vuex'
-   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
    import { UI, Colors } from 'src/utils/Constants'
    
    export default {

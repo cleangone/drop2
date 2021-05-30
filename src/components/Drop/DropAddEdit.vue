@@ -22,8 +22,7 @@
                <q-select v-if="!uploaderDisplayed" label="Home Page Group" v-model="dropToSubmit.homeGroup" :options="homeGroupOptions" filled />
                <q-input v-if="!uploaderDisplayed"  label="Home Page Position" v-model="dropToSubmit.homePosition" filled />
                <q-select v-if="!uploaderDisplayed" label="Status" v-model="dropToSubmit.status" :options="statusOptions" filled />
-			      <q-select v-if="!uploaderDisplayed" label="Default Sale Type" v-model="dropToSubmit.defaultSaleType" :options="saleTypeOptions" filled/>
-	         </div>
+			   </div>
             <div class="col q-mb-sm q-gutter-sm" :class="green">
                <q-input :label="'Start Time ' + timezone" v-model="startTime" mask="time" :rules="['time']" class="col" :class="purple" filled >
                   <template v-slot:append>
@@ -63,7 +62,7 @@
    import { date } from 'quasar'
    import { mapGetters, mapActions } from 'vuex'
 	import { DropMgr, DropStatus, HomeGroup } from 'src/managers/DropMgr'
-   import { SaleType, Colors } from 'src/utils/Constants.js'
+   import { Colors } from 'src/utils/Constants'
    import { localTimezone } from 'src/utils/DateUtils'
 
 	export default {
@@ -74,7 +73,6 @@
 					name: '',
 					startDate: null,
 					status: DropStatus.PRIVATE,
-					defaultSaleType: SaleType.BUY,
 					imageUrl: ''
             },
             startDate: date.formatDate(Date.now(), 'YYYY/MM/DD'),
@@ -83,8 +81,7 @@
             uploaderDisplayed: false,
             statusOptions: [ DropStatus.PRIVATE, DropStatus.SETUP, DropStatus.LIVE, DropStatus.DROPPED ],            
             homeGroupOptions: [ HomeGroup.PRIMARY, HomeGroup.SECONDARY, HomeGroup.NONE ],
-            saleTypeOptions: [ SaleType.BID, SaleType.BUY ]
-			}
+         }
 		},
 		computed: {
          ...mapGetters('color', Colors),

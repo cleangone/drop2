@@ -1,7 +1,6 @@
 import { firestoreAction } from 'vuexfire'
 import { firestore, firebaseStorage } from 'boot/firebase'
-import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr.js'   
-import { TagMgr } from 'src/managers/TagMgr.js'  
+import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'   
 import { dateUid } from 'src/utils/Utils'
 
 const MAX_DAYS_AGO = 31
@@ -9,15 +8,28 @@ const MILLIS_PER_DAY = 1000*60*60*24
 
 const state = { 
    items: [], 
+   activeBidItems: [],
    requestedItems: [],
    holdItems: [],
    recentItems: [],
-   dropItems: [],
+
+   // vuex binds to a key, and will generate the following state vars during binding      
+   // dropItems0-n
+   // categoryItems0-n
+}
+
+class BindingMgr {   
+   static idToVarName = new Map()
+   static setVarName(id, stateVarName) { this.idToVarName.set(id, stateVarName) }
+   static getVarName(id) { return this.idToVarName.get(id) }
 }
 
 const actions = {
    bindItems: firestoreAction(({ bindFirestoreRef }) => { 
-      bindFirestoreRef('items', collection()) 
+      bindFirestoreRef('items', collection())      
+      bindFirestoreRef('activeBidItems', collection()
+         .where('saleType', '==', ItemSaleType.BID)
+         .where('status', 'in', [ItemStatus.AVAILABLE, ItemStatus.LIVE]))
       bindFirestoreRef('requestedItems', collection().where('status', '==', ItemStatus.REQUESTED))
       bindFirestoreRef('holdItems', collection().where('status', '==', ItemStatus.HOLD))
    }),
@@ -25,11 +37,26 @@ const actions = {
       const daysAgo = Date.now() - MILLIS_PER_DAY * MAX_DAYS_AGO
       bindFirestoreRef('recentItems', collection().where('sortedCreateDate', '>', daysAgo))
    }),
-   bindDropItems: firestoreAction(({ bindFirestoreRef, state }, dropId) => { 
-      // console.log("bindDropItems", dropId)
-      if (!state.dropItems || !state.dropItems.length || state.dropItems[0].dropId != dropId) {
-         console.log("bindDropItems: binding drop", dropId)
-         bindFirestoreRef('dropItems', collection().where('dropId', '==', dropId))
+   bindDropItems: firestoreAction(({ bindFirestoreRef, state }, dropIds) => { 
+      for (let i=0; i<dropIds.length; i++) {
+         const stateVarName = 'dropItems' + i
+         const stateVar = state[stateVarName]
+         if (!stateVar || !stateVar.length || stateVar[0].dropId != dropIds[i]) {
+            console.log("bindDropItems: binding " + stateVarName, dropIds[i])
+            bindFirestoreRef(stateVarName, collection().where('dropId', '==', dropIds[i]))
+            BindingMgr.setVarName(dropIds[i], stateVarName)
+         }
+      }
+   }),
+   bindCategoryItems: firestoreAction(({ bindFirestoreRef, state }, categoryIds) => { 
+      for (let i=0; i<categoryIds.length; i++) {
+         const stateVarName = 'categoryItems' + i
+         const stateVar = state[stateVarName]
+         if (!stateVar || !stateVar.length || stateVar[0].category.id != categoryIds[i]) {
+            console.log("bindCategoryItems: binding " + stateVarName, categoryIds[i])
+            bindFirestoreRef(stateVarName, collection().where('category.id', '==', categoryIds[i]))
+            BindingMgr.setVarName(categoryIds[i], stateVarName)
+         }
       }
    }),
    setItem: firestoreAction((context, item) => { 
@@ -49,6 +76,9 @@ const actions = {
       })
    }),
    updateItem: firestoreAction((context, item) => { 
+      collection().doc(item.id).update(item) 
+   }),
+   updateItemImages: firestoreAction((context, item) => { 
       collection().doc(item.id).update(item) 
       setThumbUrls(item)
    }),
@@ -105,17 +135,21 @@ function setThumbUrl(item, retry) {
 
 const getters = {
    itemsExist: state => { return state.items && state.items.length > 0 },
-   recentItemsExist: state => { return state.recentItems && state.recentItems.length > 0 },
+   activeBidItemsExist: state => { return state.activeBidItems.length > 0 },
+   recentItemsExist: state =>    { return state.recentItems.length > 0 },
    requestedItemsExist: state => { return state.requestedItems.length > 0 },
    holdItemsExist: state =>      { return state.holdItems.length > 0 },
    getItems: state => itemIds => {   
-      // console.log("getItems", itemIds)
+      console.log("getItems(itemIds) iterating through all items")
       let items = []
       state.items.forEach(item => {
          if (itemIds.includes(item.id) ) { items.push(item) }
       })
       return items
    },
+   getActiveBidItems: state => { return [...state.activeBidItems] },
+   getRequestedItems: state => { return [...state.requestedItems] },
+   getHoldItems: state =>      { return [...state.holdItems] },
    getRecentItems: state => {   
       let items = []
       state.recentItems.forEach(item => {
@@ -124,6 +158,7 @@ const getters = {
       
       // fallback if no recent
       if (items.length == 0) {
+         console.log("getRecentItems iterating through all items")
          state.items.forEach(item => {
             if (ItemMgr.isActive(item)) { items.push(item) }
          })
@@ -133,67 +168,94 @@ const getters = {
       return items
    },
    getItemsInDrop: state => dropId => { 
-      // console.log("getItemsInDrop", dropId)
-      let items = []
-      if (state.dropItems && state.dropItems.length && state.dropItems[0].dropId ==  dropId) {
-         // console.log("getItemsInDrop: using dropItems", dropId)
-         items = [...state.dropItems]
-      }
-      else {
-         state.items.forEach(item => {
-            if (item.dropId == dropId) { items.push(item) }
-         })
-      }
-
-      items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
-      return items
-   },
-   getItemsInDrops: state => dropIds => {   
-      // console.log("getItemsInDrops", dropIds)
-      let items = []
+      let dropItems = getBoundDropItems(state, dropId) 
+      if (dropItems) { return dropItems }
+            
+      dropItems = []
+      console.log("getItemsInDrop iterating through all items")
       state.items.forEach(item => {
-         if (dropIds.includes(item.dropId)) { items.push(item) }
-      })
-      return items
-   },
-   
-   getRequestedItems: state => { return state.requestedItems },
-   getHoldItems: state => { return state.holdItems },
-   
-   getActiveItemsWithTag: state => tag => { 
-      // console.log("getItemsWithTag", tag)
-      let items = []
-      state.items.forEach(item => {
-         if (ItemMgr.isActive(item) && TagMgr.hasTag(item, tag.id)) { items.push(item) }
+         if (item.dropId == dropId) { dropItems.push(item) }
       })
 
-      items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
-      return items
+      return dropItems
    },
+   // getItemsInDrops: state => dropIds => {   
+   //    // console.log("getItemsInDrops", dropIds)
+   //    let items = []
+   //    state.items.forEach(item => {
+   //       if (dropIds.includes(item.dropId)) { items.push(item) }
+   //    })
+   //    return items
+   // },
+   // getActiveItemsWithTag: state => tag => { 
+   //    // console.log("getItemsWithTag", tag)
+   //    let items = []
+   //    state.items.forEach(item => {
+   //       if (ItemMgr.isActive(item) && TagMgr.hasTag(item, tag.id)) { items.push(item) }
+   //    })
+
+   //    items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
+   //    return items
+   // },
    getItemsWithCategory: state => categoryId => { 
-      let items = []
-      state.items.forEach(item => {
-         if (item.category && item.category.id == categoryId) { items.push(item) }
-      })
-
-      items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
-      return items
+      return getCategoryItems(state, categoryId)
    },
    getActiveItemsWithCategory: state => categoryId => { 
-      let items = []
-      state.items.forEach(item => {
-         if (ItemMgr.isActive(item) && item.category && item.category.id == categoryId) { items.push(item) }
+      const items = getCategoryItems(state, categoryId)
+      
+      let activeItems = []
+      items.forEach(item => {
+         if (ItemMgr.isActive(item)) { activeItems.push(item) }
       })
-
-      items.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)
-      return items
+      return activeItems
+   },
+   getItemInDrop: state => (itemId, dropId) => { 
+      // console.log("item-store.getItemInDrop")
+      let dropItems = getBoundDropItems(state, dropId) 
+      
+      if (!dropItems) { console.log("getItemInDrop iterating through all items") }
+      const items = dropItems ? dropItems : state.items
+      for (var item of items) {
+         if (item.id == itemId) { return item }
+      }
+      return null
    },
    getItem: state => itemId => { 
+      console.log("getItem(itemId) iterating through all items")
       for (var item of state.items) {
          if (item.id == itemId) { return item }
       }
       return null
    },
+}
+
+function getBoundDropItems(state, dropId) { 
+   const stateVarName = BindingMgr.getVarName(dropId)
+   if (stateVarName) {
+      const stateVar = state[stateVarName]
+      if (stateVar && stateVar.length && stateVar[0].dropId == dropId) { 
+         return [...stateVar]
+      }
+   }
+
+   return null
+}
+
+function getCategoryItems(state, categoryId) { 
+   const stateVarName = BindingMgr.getVarName(categoryId)
+   if (stateVarName) {
+      const stateVar = state[stateVarName]
+      if (stateVar && stateVar.length && stateVar[0].category.id == categoryId) { 
+         return [...stateVar]
+      }
+   }
+      
+   const categoryItems = []
+   console.log("getCategoryItems iterating through all items", categoryId)
+   state.items.forEach(item => {
+      if (item.category && item.category.id == categoryId) { categoryItems.push(item) }
+   })
+   return categoryItems
 }
 
 export default {

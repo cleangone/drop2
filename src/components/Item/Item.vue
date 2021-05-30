@@ -8,7 +8,7 @@
                <div v-if="hasArtist" style="line-height: 1.5em" class="q-ma-none q-pa-none">{{ artist }}</div>
                <div v-if="priceTextBgColor" :class="priceTextBgColor" class="text-bold q-px-xs">{{ priceTextMini }}</div>	
 					<div v-else :class="blue">{{ priceTextMini }}</div>	
-					<item-timer v-if="isDropping" :item="item"/>
+					<item-timer v-if="isDropping && isDrop" :item="item"/>
 				</q-card-section>	
 			</q-card>
       </div>
@@ -41,8 +41,8 @@
                <div v-if="userIsBuyer" class="text-bold" style="line-height: 1.5em">You are the buyer</div> 
                <div v-else-if="userIsWinningBidder" class="text-bold" style="line-height: 1.5em">You are the winning bidder</div> 
                <div v-else-if="userHasRequested" class="text-bold">You have requested</div>                
-               <div v-else-if="isDropping">
-                  <item-timer :item="item" :tagId="tagId"/>
+               <div v-else-if="isDroppingOrLive">
+                  <item-timer v-if="isDrop" :item="item" :tagId="tagId"/>
                   <div v-if="userIsHighBidder" :class="classHighBidder">You are High Bidder</div>
                   <div v-if="userHasHigherMax" :class="classHighBidder">Max bid {{ userMaxBid }}</div>
                   <div v-if="userIsOutbid"     :class="classOutbid">You have been outbid</div> 
@@ -58,7 +58,7 @@
 			<q-card-section :class="textFullBgColor">
             <div class="row q-mb-sm text-caption text-bold"> 
                <div class="col-5" :class="green">
-                  <router-link v-if="prev" :to="{ name: itemPageRoute, params: { itemId: prev.id } }" class="col-5" :class="red">
+                  <router-link v-if="prev" :to="prevItemLink" class="col-5" :class="red">
                      <q-btn icon="arrow_back_ios" size="sm" flat dense color="primary"/>{{prev.name}}
                   </router-link> 
                </div>
@@ -66,7 +66,7 @@
                   <router-link :to="itemsCollectionRouterLink" :class="red">{{ itemsCollectionName }}</router-link>                  
                </div>
                <div class="col-5" align="right" :class="red">
-                  <router-link v-if="next" :to="{ name: itemPageRoute, params: { itemId: next.id } }" :class="yellow">
+                  <router-link v-if="next" :to="nextItemLink" :class="yellow">
                      {{next.name}}<q-btn icon="arrow_forward_ios" size="sm" flat dense color="primary"/>
                   </router-link> 
                </div>
@@ -85,11 +85,11 @@
                <div v-if="userIsBuyer" class="text-bold">You are the buyer</div>
                <div v-else-if="userIsWinningBidder" class="text-bold">You are the winning bidder</div> 
                <div v-else-if="userHasRequested" class="text-bold">You have requested</div>                
-               <div v-else-if="isDropping">
-                  <item-timer :item="item"/>
+               <div v-else-if="isDroppingOrLive">
+                  <item-timer v-if="isDrop" :item="item"/>
                   <div v-if="userIsHighBidder" :class="classHighBidder">You are High Bidder</div>
                   <div v-if="userHasHigherMax" :class="classHighBidder">Max bid {{ userMaxBid }}</div>
-                  <div v-if="userIsOutbid"     :class="classOutbid">You have been outbid</div> 
+                  <div v-if="userIsOutbid"  :class="classOutbid" >You have been outbid</div> 
                </div> 
                <div v-if="hasDescription" class="text-grey-8" v-html="item.description" />
             </q-card-section>	
@@ -102,9 +102,9 @@
 <script>
    import { mapGetters, mapActions } from 'vuex'
    import { CategoryMgr } from 'src/managers/CategoryMgr'
-   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
+   import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
 	import { SessionMgr } from 'src/managers/SessionMgr'
-	import { ItemDisplayType, SaleType, Route, Colors } from 'src/utils/Constants'
+	import { ItemDisplayType, Route, Colors } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
    
    const BgColors = {
@@ -114,6 +114,7 @@
       BUYER:    'bg-green',
       OUTBID:   'bg-red-5',
    }
+
 	export default {
       props: ['item', 'displayType', 
          'prev', 'next', // used when displaying full image
@@ -127,18 +128,18 @@
 			...mapGetters('user', ['isAdmin']),
          ...mapGetters('drop', ['getDrop']),
          ...mapGetters('color', Colors),
-			itemDisplayType() { return this.displayType  ? this.displayType : ItemDisplayType.THUMB },
-			displayIsMini() { return this.itemDisplayType == ItemDisplayType.MINI },
-			displayIsCart() { return this.itemDisplayType == ItemDisplayType.CART },
-			displayIsThumb() { return this.itemDisplayType ==  ItemDisplayType.THUMB },
-         displayIsBidThumb() { return this.itemDisplayType ==  ItemDisplayType.BID },
+			itemDisplayType() { return this.displayType ? this.displayType : ItemDisplayType.THUMB },
+			displayIsMini()     { return this.itemDisplayType == ItemDisplayType.MINI },
+			displayIsCart()     { return this.itemDisplayType == ItemDisplayType.CART },
+			displayIsThumb()    { return this.itemDisplayType == ItemDisplayType.THUMB },
+         displayIsBidThumb() { return this.itemDisplayType == ItemDisplayType.BID },
          itemsCollection() { return SessionMgr.getDisplayItemsDesc() },
          itemsCollectionName() { return this.itemsCollection.name },
          itemsCollectionRouterLink() { 
             if (SessionMgr.isHome(this.itemsCollection))           { return { name: Route.HOME } }
             else if (SessionMgr.isRecent(this.itemsCollection))    { return { name: Route.RECENT } }
             else if (SessionMgr.isCurrent(this.itemsCollection))   { return { name: Route.CURRENT } }
-            else if (SessionMgr.isActivity(this.itemsCollection))  { return { name: Route.ACTIVITY } }
+            else if (SessionMgr.isRoute(this.itemsCollection, Route.ACTIVITY)) { return { name: Route.ACTIVITY } }
             else if (SessionMgr.isRoute(this.itemsCollection, Route.SEARCH))   { return { name: Route.SEARCH } }
             else if (SessionMgr.isRoute(this.itemsCollection, Route.FAVORITE)) { return { name: Route.FAVORITE } }
             else if (SessionMgr.isRoute(this.itemsCollection, Route.CART))     { return { name: Route.CART } }
@@ -162,11 +163,11 @@
             return width
          },	
          classHighBidder() { return "text-bold q-px-xs " + BgColors.BUYER },
-         classOubtid() { return "text-bold q-px-xs" + BgColors.OUTBID },
+         classOutbid() { return "text-bold q-px-xs " + BgColors.OUTBID },
          textBgColor() {
 				if (this.isSetup) { return "bg-grey" }
 				else if (this.isNotAvailable) { return (this.userIsBuyer || this.userIsHighBidder ? BgColors.BUYER : BgColors.SOLD) }
-            else if (this.isDropping) { return BgColors.DROPPING }
+            else if (this.isDroppingOrLive) { return BgColors.DROPPING }
             else { return "" }
          },
          textFullBgColor() {
@@ -175,25 +176,29 @@
          },
          hasArtist() { return this.artist.length > 0 },
          artist() { return CategoryMgr.categoryName(this.item) },
-         itemSaleType() { return (this.item.saleType == SaleType.DEFAULT ? this.drop.defaultSaleType : this.item.saleType) },
-			style() { return (this.image.isHorizontal ? "width: 300px" : "width: 200px") },			
+         style() { return (this.image.isHorizontal ? "width: 300px" : "width: 200px") },			
          userIsAdmin() { return this.isAdmin(this.userId) },
          isSetup() { return ItemMgr.isSetup(this.item) },
-         isAvailable() { return ItemMgr.isAvailable(this.item) || ItemMgr.isDropping(this.item)  },
-         isNotAvailable() { return ItemMgr.isHold(this.item) || ItemMgr.isInvoiced(this.item) || ItemMgr.isSold(this.item) },
+         isAvailable() { return ItemMgr.isAvailable(this.item) || this.isDroppingOrLive || ItemMgr.isRequested(this.item)  },
+         isNotAvailable() { 
+            return ItemMgr.isHold(this.item) || ItemMgr.isInvoiced(this.item) || 
+               ItemMgr.isClosed(this.item) || ItemMgr.isSold(this.item) 
+         },
          isDropping() { return ItemMgr.isDropping(this.item) },
-			isBid() { return this.itemSaleType == SaleType.BID },
-			isBuy() { return this.itemSaleType == SaleType.BUY },			
+			isDroppingOrLive() { return this.isDropping || ItemMgr.isLive(this.item) },  // both are stats with active bids
+         isBid() { return this.item.saleType == ItemSaleType.BID },
+			isBuy() { return this.item.saleType == ItemSaleType.BUY },			
+			isDrop() { return this.item.saleType == ItemSaleType.DROP },			
 			numberOfBids() { return this.item.bids ? Object.keys(this.item.bids).length : 0 },
 			currPrice() { return dollars(this.item.buyPrice > this.item.startPrice ? this.item.buyPrice : this.item.startPrice) },
 			priceText() { 
-            const prefix = ItemMgr.isDropping(this.item) ? "Current Bid: " : "Price: "
+            const prefix = this.isDroppingOrLive ? "Current Bid: " : "Price: "
             return this.buildPriceText(prefix) 
          },
 			priceTextMini() { return this.buildPriceText("") + (this.isDropping && this.hasBids ? " (" + this.bidText + ")" : "") },
 			priceTextBgColor() { 
-				if (this.isDropping && this.userIsHighBidder)  { return BgColors.BUYER }
-				else if (this.isDropping && this.userIsOutbid) { return BgColors.SOLD }
+				if (this.isDroppingOrLive && this.userIsHighBidder)  { return BgColors.BUYER }
+				else if (this.isDroppingOrLive && this.userIsOutbid) { return BgColors.OUTBID }
 				else  {return "" }
          },
          hasBids() { return this.item.numberOfBids && this.item.numberOfBids > 0 },
@@ -210,16 +215,19 @@
 			userIsOutbid() { return this.loggedIn && !this.userIsHighBidder && this.item.bidderIds && this.item.bidderIds.includes(this.userId) },
          userHasHigherMax() { return this.userIsHighBidder && (this.item.currBid.amount > this.item.buyPrice) },
          userMaxBid() { return dollars(this.item.currBid.amount) },
-         itemPageRoute() { return Route.ITEM },
+         prevItemLink() { return "/item/" + this.prev.id + this.dropParam(this.prev) },
+         nextItemLink() { return "/item/" + this.next.id + this.dropParam(this.next) },
       },
       methods: {
          ...mapActions('cart', ['removeItemFromCart']),
          buildPriceText(prefix) {
 				if (ItemMgr.isSold(this.item)) { return ItemStatus.SOLD }
-				else if (ItemMgr.isHold(this.item) || ItemMgr.isInvoiced(this.item)) { return ItemStatus.HOLD + " (" + this.currPrice + ")" }
+				else if (ItemMgr.isClosed(this.item)) { return ItemStatus.CLOSED + " (" + this.currPrice + ")" }
+            else if (ItemMgr.isHold(this.item) || ItemMgr.isInvoiced(this.item)) { return ItemStatus.HOLD + " (" + this.currPrice + ")" }
             else if (ItemMgr.isDropping(this.item)) { return prefix + this.currPrice }
             else return prefix + this.currPrice
          },
+         dropParam(item) { return item.dropId ? "/" + item.dropId : "" },
          removeFromCart() { this.removeItemFromCart(this.item.id) },
       },
 		filters: {

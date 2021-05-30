@@ -37,7 +37,6 @@ export class SessionMgr {
    static isCategory(displayItemsDesc)  { return displayItemsDesc.route == Route.CATEGORY }
    static isRecent(displayItemsDesc)    { return displayItemsDesc.route == Route.RECENT }
    static isCurrent(displayItemsDesc)   { return displayItemsDesc.route == Route.CURRENT }
-   static isActivity(displayItemsDesc)  { return displayItemsDesc.route == Route.ACTIVITY }
    static isRoute(displayItemsDesc, route)  { return displayItemsDesc.route == route }
    
 }

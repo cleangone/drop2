@@ -11,6 +11,7 @@ const routes = [
          createRoute('/auth/forgot',         'Auth/ForgotPasswordPage'),
          createRoute('/drop/:id',            'DropPage',                 Route.DROP),
          createRoute('/item/:itemId',        'ItemPage',                 Route.ITEM),
+         createRoute('/item/:itemId/:dropId','ItemPage'),
          createRoute('/category/:id/',       'CategoryPage'),
          createRoute('/category/:id/:tagId', 'CategoryPage',             Route.CATEGORY),
          createRoute('/bids/:itemId',        'BidsPage'),

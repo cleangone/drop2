@@ -32,11 +32,19 @@ export const ItemStatus = {
    PRIVATE:   'Private',
    SETUP:     'Setup',
    AVAILABLE: 'Available',
+   LIVE:      'Live',
    DROPPING:  'Dropping',
    REQUESTED: 'Requested',
    HOLD:      'On Hold',
    INVOICED:  'Invoiced',
    SOLD:      'Sold',
+   CLOSED:    'Closed',  // not availble to bid/buy, but not purchased
+}
+
+export const ItemSaleType = {
+   BID: 'Bid', // standard auction - admin closes items
+   BUY: 'Buy', 
+   DROP: 'Drop',  // auto countdown to sold 
 }
 
 export class ItemMgr {
@@ -106,15 +114,21 @@ export class ItemMgr {
 
    static isBuyerId(item, userId) { return item.buyerId == userId } 
                     
-   static isActive(item)    { return !ItemMgr.isPrivate(item) && !ItemMgr.isSetup(item) } 
-   static isListed(item)    { return ItemMgr.isAvailable(item) || ItemMgr.isDropping(item) || ItemMgr.isRequested(item) }
-   static isGone(item)      { return ItemMgr.isHold(item) || ItemMgr.isInvoiced(item) || ItemMgr.isSold(item) } 
+   static isActive(item) { return !ItemMgr.isPrivate(item) && !ItemMgr.isSetup(item) } 
+   static isListed(item) { 
+      return ItemMgr.isAvailable(item) || ItemMgr.isDropping(item) || ItemMgr.isLive(item) || ItemMgr.isRequested(item) 
+   }
+   static isGone(item) { 
+      return ItemMgr.isHold(item) || ItemMgr.isInvoiced(item) || ItemMgr.isSold(item) 
+   } 
    
    static isPrivate(item)   { return item.status == ItemStatus.PRIVATE }
    static isSetup(item)     { return item.status == ItemStatus.SETUP }
    static isAvailable(item) { return item.status == ItemStatus.AVAILABLE }
+   static isLive(item)      { return item.status == ItemStatus.LIVE }
    static isDropping(item)  { return item.status == ItemStatus.DROPPING }
    static isRequested(item) { return item.status == ItemStatus.REQUESTED }
+   static isClosed(item)    { return item.status == ItemStatus.CLOSED }
    static isHold(item)      { return item.status == ItemStatus.HOLD }
    static isInvoiced(item)  { return item.status == ItemStatus.INVOICED }
    static isSold(item)      { return item.status == ItemStatus.SOLD }

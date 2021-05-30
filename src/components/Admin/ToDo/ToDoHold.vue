@@ -22,21 +22,21 @@
    import { mapGetters } from 'vuex'    
    import { UserMgr } from 'src/managers/UserMgr'   
    import { Route, Colors } from 'src/utils/Constants'
-   import { dollars } from 'src/utils/Utils'
    import { formatDateTimeOptYear, localTimezone } from 'src/utils/DateUtils'
-
+   import { dollars, syncRows } from 'src/utils/Utils'
+   
    export default {
       data() {
 	  		return {
             returnRoute: Route.TODO,
             visibleColumns: [ 'name', 'date', 'buyer', 'drop', 'price'],
  				columns: [
-        			{ name: 'name',   label: 'Name',   align: 'left',   field: 'name',       sortable: true },
-				 	{ name: 'buyer',  label: 'Buyer',  align: 'left',   field: 'buyerId',    sortable: true, format: val => this.userFullName(val) },
-					{ name: 'date',   label: 'Date ' + localTimezone(), 
-                                                  align: 'center', field: 'userUpdatedDate', sortable: true, format: val => formatDateTimeOptYear(val) },
-					{ name: 'drop',   label: 'Drop',   align: 'center',                      sortable: true },
-				 	{ name: 'price',  label: 'Price',  align: 'right',  field: 'startPrice', sortable: true, format: val => dollars(val) }, 
+        			{ name: 'name',  label: 'Name',  align: 'left',   field: 'name',     sortable: true },
+				 	{ name: 'buyer', label: 'Buyer', align: 'left',   field: 'buyerId',  sortable: true, format: val => this.userFullName(val) },
+					{ name: 'date',  label: 'Date ' + localTimezone(), 
+                                                align: 'center', field: 'userUpdatedDate', sortable: true, format: val => formatDateTimeOptYear(val) },
+					{ name: 'drop',  label: 'Drop',  align: 'center',                    sortable: true },
+				 	{ name: 'price', label: 'Price', align: 'right',  field: 'buyPrice', sortable: true, format: val => dollars(val) }, 
 				],
             selectedRowItems: [],
             pagination: { rowsPerPage: 20 },
@@ -51,8 +51,7 @@
          ...mapGetters('color', Colors),
          userLookup() { return this.getUserLookup },
          buyerOptions() {
-            // return ["Bill", "Dan", ""]
-
+            // list of buyers 
             const buyerIds = new Set()
             for (var item of this.getHoldItems) {
                buyerIds.add(item.buyerId) 
@@ -90,17 +89,7 @@
       },
 		methods: {
          userFullName(userId) { return UserMgr.lookupFullName(this.userLookup, userId) },
-         rowClicked (evt, row) {
-            const index = this.selectedRowIndex(row)
-            if (index == -1 ) { this.selectedRowItems.push(row) }
-            else { this.selectedRowItems.splice(index, 1) }
-         },
-         selectedRowIndex(row) {
-            for (var i=0; i<this.selectedRowItems.length; i++) {
-               if (this.selectedRowItems[i].id == row.id ) { return i }
-            }
-            return -1
-         },
+         rowClicked (evt, row) { syncRows(row, this.selectedRowItems) },
 		   invoiceModalClosed() { 
             this.showInvoiceModal = false 
             this.selectedRowItems = []

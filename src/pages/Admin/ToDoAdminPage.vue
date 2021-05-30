@@ -2,8 +2,9 @@
    <q-page>
       <div class="text-h5 q-mt-md q-ml-sm">ToDo</div>
       <div v-if="requestedItemsExist || holdItemsExist || visibleEmailErrorsExist">
-         <todo-purchase-req v-if="requestedItemsExist" class="q-pa-sm" :class="orange"/>
+         <todo-purchase-req v-if="requestedItemsExist" class="q-pa-sm" :class="pink" />
          <todo-hold v-if="holdItemsExist" class="q-pa-sm" :class="orange"/>
+         <todo-close-items v-if="activeBidItemsExist" class="q-pa-sm" :class="blue" />
          <todo-email-error v-if="visibleEmailErrorsExist" class="q-pa-sm" :class="orange"/>
       </div>
       <div v-else class="q-mt-md q-ml-sm">No ToDo items</div>
@@ -16,14 +17,15 @@
    
 	export default {
 		computed: {
-         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist']),
+         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist', 'activeBidItemsExist']),
          ...mapGetters('error', ['visibleEmailErrorsExist']),
          ...mapGetters('color', Colors),
       },
 		components: {
-         'todo-purchase-req' : require('components/Admin/ToDoPurchaseReq.vue').default,
-         'todo-hold' : require('components/Admin/ToDoHold.vue').default,
-         'todo-email-error' : require('components/Admin/ToDoEmailError.vue').default,
+         'todo-purchase-req' : require('components/Admin/ToDo/ToDoPurchaseReq.vue').default,
+         'todo-hold'         : require('components/Admin/ToDo/ToDoHold.vue').default,
+         'todo-close-items'  : require('components/Admin/ToDo/ToDoCloseItems.vue').default,
+         'todo-email-error'  : require('components/Admin/ToDo/ToDoEmailError.vue').default,
       },
    }
 
