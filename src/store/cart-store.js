@@ -5,15 +5,14 @@ import { Notify } from 'quasar'
 /*
    cart:
       id (userId)
-      userId (hack - duplicated for search)
-      itemIds [ id ]
+      itemIds [ id ] // kept in addition to items for quick lookup of whether item in cart
+      items [ {id, dropId} ]
       createdDate    
 */
 
 const state = {
-   userId: {},
-   userCarts: [], // one per user
-   // cart: {}
+   userCart: {}, 
+   userId: {}, // not persisted - used for initial cart creation
 }
 
 const mutations = {
@@ -21,91 +20,94 @@ const mutations = {
 }
 
 const actions = {
-   bindUserCarts: firestoreAction(({ bindFirestoreRef, commit }, userId) => {
-      // console.log("bindUserCarts", userId)
-      bindFirestoreRef('userCarts', collection().where('userId', '==', userId)) 
-
-      // bindFirestoreRef('cart', collection().doc(userId))
-
+   bindUserCart: firestoreAction(({ bindFirestoreRef, commit }, userId) => {
+      bindFirestoreRef('userCart', collection().doc(userId))
       commit('setUserId', userId) 
    }),
-
-
-
-   unbindUserCarts: firestoreAction(({ unbindFirestoreRef }) => {
-      unbindFirestoreRef('userCarts')
-      // unbindFirestoreRef('cart')
+   unbindUserCart: firestoreAction(({ unbindFirestoreRef }) => {
+      unbindFirestoreRef('userCart')
    }),
+   addItemToCart({ state }, item) { 
+      // console.log("addItemToCart", item)
+      if (state.userCart) {
+         if (!state.userCart.itemIds.includes(item.id)) { 
+            const updatedItemIds = [...state.userCart.itemIds]
+            updatedItemIds.push(item.id)
 
-   addItemIdToCart({ state }, itemId) { 
-      console.log("addItemIdToCart", itemId)
-      // console.log("addItemIdToCart: " + state.userCarts.length + " carts")
-      const cart = state.userCarts[0]
-      if (cart) {
-         if (!cart.itemIds.includes(itemId)) { 
-            // console.log("addItemIdToCart: updating itemIds in cart " + cart.id)
-            let updatedItemIds = [...cart.itemIds]
-            updatedItemIds.push(itemId)
-            collection().doc(cart.id).update({ itemIds: updatedItemIds })
+            const updatedItems = [...state.userCart.items]
+            updatedItems.push({ id: item.id, dropId: item.dropId })
+
+            collection().doc(state.userCart.id).update({ itemIds: updatedItemIds, items: updatedItems })
          }
       } 
       else {
-         // console.log("addItemIdToCart: new cart " + state.userId)
-         collection().doc(state.userId).set({ userId: state.userId, itemIds: [itemId], createdDate: new Date() })
+         const items = [{ id: item.id, dropId: item.dropId }]
+         collection().doc(state.userId).set({ itemIds: [item.id], items: items, createdDate: new Date() })
       }
       showPositiveNotify("Item added to cart")
    },
+   addItemsToCart({ state }, items) { 
+      // console.log("addItemsToCart", items)
+      if (!items || !items.length) { return }
 
-
-
-   addItemIdsToCart({ state }, itemIds) { 
-      // console.log("addItemIdsToCart", itemIds)
-      // console.log("addItemIdsToCart: " + state.userCarts.length + " carts")
-      if (!itemIds || !itemIds.length) { return }
-      
-      const cart = state.userCarts[0]
-      if (cart) {
-         let updatedItemIds = [...cart.itemIds]
-         for (var itemId of itemIds) {
-            if (!updatedItemIds.includes(itemId)) { updatedItemIds.push(itemId) }
+      if (state.userCart) {
+         let updatedItemIds = [...state.userCart.itemIds]
+         let updatedItems   = [...state.userCart.items]
+         for (var item of items) {
+            if (!updatedItemIds.includes(item.id)) { 
+               updatedItemIds.push(item.id) 
+               updatedItems.push({ id: item.id, dropId: item.dropId }) 
+            }
          }
-         if (cart.itemIds.length != updatedItemIds.length) { 
-            collection().doc(cart.id).update({ itemIds: updatedItemIds })
+
+         if (state.userCart.itemIds.length != updatedItemIds.length) { 
+            collection().doc(state.userCart.id).update({ itemIds: updatedItemIds, items: updatedItems })
          }
       } 
       else {
-         // console.log("addItemIdsToCart: new cart " + state.userId)
-         collection().doc(state.userId).set({ userId: state.userId, itemIds: itemIds, createdDate: new Date() })
+         const cartItemIds = []
+         const cartItems = []
+         for (var item of items) {
+            cartItemIds.push(item.id) 
+            cartItems.push({ id: item.id, dropId: item.dropId })
+         }
+         collection().doc(state.userId).set({ itemIds: cartItemIds, items: cartItems, createdDate: new Date() })
       }
    },
    removeItemFromCart({ state }, itemId) { 
-      console.log("removeItemFromCart", itemId)
-      const cart = state.userCarts[0]
-      const index = cart ? cart.itemIds.indexOf(itemId) : -1
-      if (index > -1) { 
-         let updatedItemIds = [...cart.itemIds]
-         updatedItemIds.splice(index, 1) 
-         collection().doc(cart.id).update({ itemIds: updatedItemIds })
+      // console.log("removeItemFromCart", itemId)
+      if (state.userCart) {
+         const index = state.userCart.itemIds.indexOf(itemId)
+         if (index > -1) { 
+            let updatedItemIds = [...state.userCart.itemIds]
+            updatedItemIds.splice(index, 1) 
+
+            const updatedItems = []
+            for (var item of state.userCart.items) {
+               if (item.id != itemId) { updatedItems.push(item) }
+            }
+            collection().doc(state.userCart.id).update({ itemIds: updatedItemIds, items: updatedItems })
+         }
       }
    },
    clearCart({ state }) { 
-      console.log("clearCart")
-      const cart = state.userCarts[0]
-      if (cart && cart.itemIds.length) { 
-         collection().doc(cart.id).update({ itemIds: [] })
+      // console.log("clearCart")
+      if (state.userCart && state.userCart.itemIds.length) { 
+         collection().doc(state.userCart.id).update({ itemIds: [], items: [] })
       }
    },
 }
 
 const getters = {
-   getCart: state => {
-      return state.userCarts[0] ? state.userCarts[0] : null
-   },
+   getCart: state => { return state.userCart },
    cartSize: state => { 
-      return state.userCarts[0] && state.userCarts[0].itemIds ? state.userCarts[0].itemIds.length : 0 
+      return state.userCart && state.userCart.itemIds ? state.userCart.itemIds.length : 0 
    },
    getCartItemIds: state => { 
-      return state.userCarts[0] && state.userCarts[0].itemIds ? state.userCarts[0].itemIds : [] 
+      return state.userCart && state.userCart.itemIds ? state.userCart.itemIds : [] 
+   },
+   getCartItems: state => { 
+      return state.userCart && state.userCart.items ? state.userCart.items : [] 
    },
 }
 

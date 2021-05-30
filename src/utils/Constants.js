@@ -36,6 +36,7 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.2.1  - 5/30/21",  // Vuexfire bind cart to a single doc, hold dropIds in cart for quicker item lookup   
    "v2.2.0  - 5/29/21",  // Remove Drop.saleType, SaleType.DROP takes place of BID, BID becomes manually controlled auction 
                          // Bind active bid and primary drops items to reduce item iteration
                          // Use bound drop items for ItemPage lookup

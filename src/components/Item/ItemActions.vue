@@ -81,7 +81,7 @@
       },
 		methods: {
          ...mapActions('action', ['submitBid', 'submitPurchaseRequest']),
-         ...mapActions('cart', ['addItemIdToCart']),
+         ...mapActions('cart', ['addItemToCart']),
          ...mapActions('current', ['setCurrentActivity']),
          ...mapActions('user', ['setLikes']),
 			login() { this.$router.push("/auth/login") },
@@ -96,7 +96,7 @@
                this.setCurrentActivity(true) 
 				})
 			},
-         addToCart() { this.addItemIdToCart(this.item.id) },			
+         addToCart() { this.addItemToCart(this.item) },			
 		},
 		filters: {
 			formatPrice(priceObj) { return "$" + priceObj + (String(priceObj).includes(".") ? "" : ".00") }

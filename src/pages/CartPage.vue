@@ -74,14 +74,14 @@
 	  	computed: {
 			...mapGetters('auth', ['loggedIn', 'anonLoggedIn', 'userId']),
          ...mapGetters('user', ['getUser']),
-			...mapGetters('cart', ['cartSize', 'getCartItemIds']),
-         ...mapGetters('item', ['getItems']),
+			...mapGetters('cart', ['cartSize', 'getCartItems']),
+         ...mapGetters('item', ['getItemsInDrops']),
          user() { return this.getUser(this.userId) }, // can be anon or regular
          displayType() { return ItemDisplayType.CART },
          userInfoWidth() { return this.$q.screen.width > 600 ? "600px" : "75%"},
          cartItemsExist() { return this.cartSize > 0 },
          cartItems() { 
-            let items = this.getItems(this.getCartItemIds)
+            let items = this.getItemsInDrops(this.getCartItems)
             items.sort((a,b) => a.sortName.localeCompare(b.sortName))
 
             SessionMgr.setRouteItemsDesc(Route.CART)

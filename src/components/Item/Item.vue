@@ -17,7 +17,10 @@
 				<item-thumb :item="item" :image="image" vImageWidth="125" hImageWidth="262" imageMaxHeight="200" :tagId="tagId"/>
 				<q-card-section class="text-caption q-pa-xs" :class="purple">
 					<div style="line-height: 1.25em" class="text-weight-bold" :class="orange">{{ item.name }}</div>
-               <div v-if="hasArtist" style="line-height: 1.5em" class="q-ma-none q-pa-none">{{ artist }}</div>
+               <div v-if="hasArtist" style="line-height: 1.25em" class="q-ma-none q-pa-none">{{ artist }}</div>               
+               <div v-if="showDrop" style="line-height:1em" class="q-ma-none q-pa-none">                 
+                  <router-link :to="'/drop/'+drop.id" class="text-blue">{{drop.name}}</router-link>
+               </div>
                <div v-if="priceTextBgColor" :class="priceTextBgColor" class="text-bold q-px-xs">{{ priceTextMini }}</div>	
 					<div v-else :class="blue">{{ priceTextMini }}</div>	
 				</q-card-section>	
@@ -102,7 +105,8 @@
 <script>
    import { mapGetters, mapActions } from 'vuex'
    import { CategoryMgr } from 'src/managers/CategoryMgr'
-   import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
+   import { DropMgr } from 'src/managers/DropMgr'
+	import { ItemMgr, ItemStatus, ItemSaleType } from 'src/managers/ItemMgr'
 	import { SessionMgr } from 'src/managers/SessionMgr'
 	import { ItemDisplayType, Route, Colors } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
@@ -151,7 +155,8 @@
             else { return null } 
          },
 			drop() { return this.getDrop(this.item.dropId) },
-			image() { return this.item.primaryImage }, 
+			showDrop() { return this.drop && DropMgr.isActive(this.drop) },
+         image() { return this.item.primaryImage }, 
          hasImageUrl() { return (this.image.url ? true : false) },
 			hasDescription() { return this.item.description && this.item.description.length },
 			imageUrl() { return this.image.url ? this.image.url : 'image-placeholder.png' },

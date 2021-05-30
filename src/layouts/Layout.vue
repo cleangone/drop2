@@ -120,7 +120,7 @@
             drawerLockedOpen: false,
             drawerMouseover: false,
             boundUserId: null,
-            unboundCartItemIds: [],
+            unboundCartItems: [],
             cancelledAlertIds: [],
             showAdminFooter: true,
             showSearch: false,
@@ -131,7 +131,7 @@
       computed: {
          ...mapGetters('auth', ['userId', 'loggedIn', 'anonLoggedIn']),
          ...mapGetters('action', ['actionsExist', 'getUserActions']),
-         ...mapGetters('cart', ['cartSize', 'getCartItemIds']),
+         ...mapGetters('cart', ['cartSize', 'getCartItems']),
          ...mapGetters('category', ['getPublicCategories']),
          ...mapGetters('current', ['currentActivityExists']),
          ...mapGetters('drop', ['getHomePageDrops']),
@@ -167,8 +167,8 @@
                   this.unbindUserActions() 
                   this.unbindUserInvoices() 
                   
-                  this.unboundCartItemIds = this.getCartItemIds
-                  this.unbindUserCarts()
+                  this.unboundCartItems = this.getCartItems
+                  this.unbindUserCart()
                   this.boundUserId = null
                }
 
@@ -225,7 +225,7 @@
          categories() { 
             // piggyback drop binding 
             const drops = this.getHomePageDrops
-            console.log('Layout: binding drops', drops)
+            // console.log('Layout: binding drops', drops)
             if (drops.length) {
                this.bindDropItems(getIds(drops)) // drop bind a no-op if already bound    
             }
@@ -240,7 +240,7 @@
       methods: {
          ...mapActions('action',  ['bindActions', 'bindUserActions', 'unbindUserActions']),
          ...mapActions('auth',    ['loginAnonUser', 'logoutUser']),
-         ...mapActions('cart',    ['bindUserCarts', 'unbindUserCarts', 'addItemIdsToCart']),
+         ...mapActions('cart',    ['bindUserCart', 'unbindUserCart', 'addItemsToCart']),
          ...mapActions('current', ['setCurrentActivity']),
          ...mapActions('drop',    ['bindDrops']),
          ...mapActions('error',   ['bindEmailErrors']),
@@ -264,10 +264,10 @@
          },
          bindCart() { 
             // preserve any items in current cart or in cart when logged out  
-            const currItemIds = this.getCartItemIds
-            this.bindUserCarts(this.userId)  
-            this.addItemIdsToCart(currItemIds)  
-            this.addItemIdsToCart(this.unboundCartItemIds)  
+            const currItems = this.getCartItems
+            this.bindUserCart(this.userId)  
+            this.addItemsToCart(currItems)  
+            this.addItemsToCart(this.unboundCartItems)  
             this.unboundCartItemIds = []
          },
          logout() {        
