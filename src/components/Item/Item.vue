@@ -220,8 +220,8 @@
 			userIsOutbid() { return this.loggedIn && !this.userIsHighBidder && this.item.bidderIds && this.item.bidderIds.includes(this.userId) },
          userHasHigherMax() { return this.userIsHighBidder && (this.item.currBid.amount > this.item.buyPrice) },
          userMaxBid() { return dollars(this.item.currBid.amount) },
-         prevItemLink() { return "/item/" + this.prev.id + this.dropParam(this.prev) },
-         nextItemLink() { return "/item/" + this.next.id + this.dropParam(this.next) },
+         prevItemLink() { return this.itemUrl(this.prev) },
+         nextItemLink() { return this.itemUrl(this.next) },
       },
       methods: {
          ...mapActions('cart', ['removeItemFromCart']),
@@ -232,7 +232,11 @@
             else if (ItemMgr.isDropping(this.item)) { return prefix + this.currPrice }
             else return prefix + this.currPrice
          },
-         dropParam(item) { return item.dropId ? "/" + item.dropId : "" },
+         itemUrl(item) { 
+            const dropId = item.dropId ? item.dropId : "0" 
+            const categoryId = item.category && item.category.id ? item.category.id : "0" 
+            return "/item/" + item.id + "/" + dropId + "/" + categoryId
+         },
          removeFromCart() { this.removeItemFromCart(this.item.id) },
       },
 		filters: {

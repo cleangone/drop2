@@ -53,8 +53,12 @@
       methods: {
          navToItemPage() { 
             if (SessionMgr.isCategory(SessionMgr.getDisplayItemsDesc())) { SessionMgr.setCategoryTag(this.tagId) }
-            const dropParam = this.item.dropId ? "/" + this.item.dropId : "" 
-            this.$router.push("/item/" + this.item.id + dropParam) 
+            this.$router.push(this.itemUrl(this.item)) 
+         },
+         itemUrl(item) { 
+            const dropId = item.dropId ? item.dropId : "0" 
+            const categoryId = item.category && item.category.id ? item.category.id : "0" 
+            return "/item/" + item.id + "/" + dropId + "/" + categoryId
          },
          mouseenter(event) {
             // console.log("mouseenter", event)

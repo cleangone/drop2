@@ -63,7 +63,7 @@
          isAdmin() { return this.user && this.user.isAdmin },
          visibleItems() { // sep fm displayItems because item state more stable than ui viewing
             const visibleItems = []
-            const items = this.getItemsInDrop(this.dropId) 
+            const items = this.getItemsInDrop(this.drop.id) 
             items.forEach(item => { 
                if (ItemMgr.isActive(item) || (this.adminView && ItemMgr.isSetup(item))) { visibleItems.push(item) }
 		      })

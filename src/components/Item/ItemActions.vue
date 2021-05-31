@@ -62,7 +62,7 @@
             let itemSaleType = this.item.saleType
             // todo - reexamine this change to buy once drop has finished
             if (DropMgr.isDropped(this.drop)) { itemSaleType = ItemSaleType.BUY }
-            if (itemSaleType == ItemSaleType.BID && this.item.numberOfBids == 0) {
+            if (itemSaleType == ItemSaleType.DROP && this.item.numberOfBids == 0) {
                // todo - reexamine this - overly complicated
                const bidPeriodEndMillis = this.drop.startDate.seconds*1000 + this.setting.bidPeriod*60*1000
                if (new Date().getTime() > bidPeriodEndMillis) { itemSaleType = ItemSaleType.BUY }

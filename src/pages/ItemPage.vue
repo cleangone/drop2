@@ -21,17 +21,14 @@
 			return {				
             itemId: "",
             dropId: null,
+            categoryId: null
          }
 		},
 	  	computed: {
-         ...mapGetters('item', ['itemsExist', 'getItem', 'getItemInDrop']),			
+         ...mapGetters('item', ['itemsExist', 'getBoundItem']),			
 			...mapGetters('color', Colors),
 			displayTypeFull() { return ItemDisplayType.FULL },
-         item() { 
-            return this.dropId ? 
-               this.getItemInDrop(this.itemId, this.dropId) : 
-               this.getItem(this.itemId) 
-         },
+         item() { return this.getBoundItem(this.itemId, this.dropId, this.categoryId) },
          displayedItems() { 
             const itemsCollection = SessionMgr.getDisplayItemsDesc()
             if (SessionMgr.isCategory(itemsCollection)) {
@@ -58,9 +55,18 @@
          },
       },
 		methods: {
-         prev() { if (this.prevItem) { this.$router.push("/item/" + this.prevItem.id + this.dropUrlParam(this.prevItem)) } },
-         next() { if (this.nextItem) { this.$router.push("/item/" + this.nextItem.id + this.dropUrlParam(this.nextItem)) } },
-         dropUrlParam(item) { return item.dropId ? "/" + item.dropId : "" },
+         setIds(itemId, dropId, catId) { 
+            this.itemId = itemId
+            this.dropId = dropId && dropId != "0" ? dropId : null
+            this.categoryId = catId && catId != "0" && typeof catId != 'undefined' ? catId : null
+         },
+         prev() { if (this.prevItem) { this.$router.push(this.itemUrl(this.prevItem)) } },
+         next() { if (this.nextItem) { this.$router.push(this.itemUrl(this.nextItem)) } },
+         itemUrl(item) { 
+            const dropId = item.dropId ? item.dropId : "0" 
+            const categoryId = item.category && item.category.id ? item.category.id : "0" 
+            return "/item/" + item.id + "/" + dropId + "/" + categoryId
+         },
          handleSwipe({ evt, ...info }) {
             if (isSwipeLeft(info)) { this.next() }
             else if (isSwipeRight(info)) { this.prev() }
@@ -72,14 +78,12 @@
       directives: {
          TouchSwipe
       },
-      created() {
-         this.itemId = this.$route.params.itemId
-         this.dropId = this.$route.params.dropId ? this.$route.params.dropId : null
+      created() { 
+         this.setIds(this.$route.params.itemId, this.$route.params.dropId, this.$route.params.catId)
       },
       watch: {
          $route() { 
-            this.itemId = this.$route.params.itemId 
-            this.dropId = this.$route.params.dropId ? this.$route.params.dropId : null
+            this.setIds(this.$route.params.itemId, this.$route.params.dropId, this.$route.params.catId)
          }
       },
 	}

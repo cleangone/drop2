@@ -12,10 +12,26 @@ const state = {
    requestedItems: [],
    holdItems: [],
    recentItems: [],
-
-   // vuex binds to a key, and will generate the following state vars during binding      
-   // dropItems0-n
-   // categoryItems0-n
+   
+   // vuex can generates vars during binding, but updates not pushed if they are not declared      
+   dropItems0: [],
+   dropItems1: [],
+   dropItems2: [],
+   dropItems3: [],
+   dropItems4: [],
+   dropItems5: [],
+   dropItems6: [],
+   categoryItems0: [],
+   categoryItems1: [],
+   categoryItems2: [],
+   categoryItems3: [],
+   categoryItems4: [],
+   categoryItems5: [],
+   categoryItems6: [],
+   categoryItems7: [],
+   categoryItems8: [],
+   categoryItems9: [],
+   categoryItems10: [],
 }
 
 const actions = {
@@ -35,8 +51,7 @@ const actions = {
       for (let i=0; i<dropIds.length; i++) {
          const stateVarName = 'dropItems' + i
          const stateVar = state[stateVarName]
-         if (!stateVar || !stateVar.length || stateVar[0].dropId != dropIds[i]) {
-            // console.log("bindDropItems: binding " + stateVarName, dropIds[i])
+         if (stateVar && (!stateVar.length || stateVar[0].dropId != dropIds[i])) {
             console.log("bindDropItems: " + stateVarName)
             bindFirestoreRef(stateVarName, collection().where('dropId', '==', dropIds[i]))
             BindingMgr.setVarName(dropIds[i], stateVarName)
@@ -47,8 +62,7 @@ const actions = {
       for (let i=0; i<categoryIds.length; i++) {
          const stateVarName = 'categoryItems' + i
          const stateVar = state[stateVarName]
-         if (!stateVar || !stateVar.length || stateVar[0].category.id != categoryIds[i]) {
-            // console.log("bindCategoryItems: binding " + stateVarName, categoryIds[i])
+         if (stateVar && (!stateVar.length || stateVar[0].category.id != categoryIds[i])) {
             console.log("bindCategoryItems: " + stateVarName)
             bindFirestoreRef(stateVarName, collection().where('category.id', '==', categoryIds[i]))
             BindingMgr.setVarName(categoryIds[i], stateVarName)
@@ -225,6 +239,19 @@ const getters = {
       }
       return null
    },
+   getBoundItem: state => (itemId, dropId, categoryId) => { 
+      let items = dropId ? getBoundDropItems(state, dropId) : null
+      if (!items) { items = categoryId ? getCategoryItems(state, categoryId) : null }
+      if (!items) { 
+         console.log("getBoundItem iterating through all items")
+         items = state.items
+      }
+      
+      for (var item of items) {
+         if (item.id == itemId) { return item }
+      }
+      return null
+   },
    getItem: state => itemId => { 
       console.log("getItem(itemId) iterating through all items")
       for (var item of state.items) {
@@ -236,17 +263,19 @@ const getters = {
 
 class BindingMgr {   
    static idToVarName = new Map()
-   static setVarName(id, stateVarName) { this.idToVarName.set(id, stateVarName) }
+   static isBound(id) { return this.idToVarName.has(id) }
    static getVarName(id) { return this.idToVarName.get(id) }
+   static setVarName(id, stateVarName) { this.idToVarName.set(id, stateVarName) }
 }
 
 function collection() { return firestore.collection('items') }
 
 function getBoundDropItems(state, dropId) { 
-   const stateVarName = BindingMgr.getVarName(dropId)
+   const stateVarName = dropId ? BindingMgr.getVarName(dropId) : null
    if (stateVarName) {
       const stateVar = state[stateVarName]
       if (stateVar && stateVar.length && stateVar[0].dropId == dropId) { 
+         console.log("getBoundDropItems - using bound drop", stateVarName)
          return [...stateVar]
       }
    }
@@ -255,10 +284,11 @@ function getBoundDropItems(state, dropId) {
 }
 
 function getCategoryItems(state, categoryId) { 
-   const stateVarName = BindingMgr.getVarName(categoryId)
+   const stateVarName = categoryId ? BindingMgr.getVarName(categoryId) : null
    if (stateVarName) {
       const stateVar = state[stateVarName]
       if (stateVar && stateVar.length && stateVar[0].category.id == categoryId) { 
+         console.log("getCategoryItems - using bound category", stateVarName)
          return [...stateVar]
       }
    }
