@@ -23,9 +23,10 @@ export class UserMgr {
       if (UserMgr.exists(user.nickname)) { return user.nickname }
       else if (UserMgr.exists(user.firstName)) { return user.firstName }
       else if (UserMgr.exists(user.lastName)) { return user.lastName }
-      else if (UserMgr.exists(user.authEmailCopy)) { return user.authEmailCopy }
-      else return "User"
+      else { return UserMgr.getEmail(user) }
    }
+
+   static getEmail(user) { return user.authEmailCopy ? user.authEmailCopy : user.anonUserEmail }
 
    static getUserIdToInfo(users) { 
       let userIdToInfo = new Map()

@@ -51,7 +51,7 @@
                   <div v-if="userIsOutbid"     :class="classOutbid">You have been outbid</div> 
                </div> 
 				</q-card-section>	
-            <div v-if="isAvailable || (userIsAdmin && isSetup)" style="height:25px"/> <!-- spacer for actions when expanded -->
+            <div v-if="isActive || (userIsAdmin && isSetup)" style="height:25px"/> <!-- spacer for actions when expanded -->
 				<q-card-section class="absolute-bottom-left q-px-xs q-pt-xs q-pb-none" style="width: 100%" :class="green">
                <item-actions :item="item" :displayType="itemDisplayType"/>
 			   </q-card-section>	
@@ -184,20 +184,23 @@
          style() { return (this.image.isHorizontal ? "width: 300px" : "width: 200px") },			
          userIsAdmin() { return this.isAdmin(this.userId) },
          isSetup() { return ItemMgr.isSetup(this.item) },
-         isAvailable() { return ItemMgr.isAvailable(this.item) || this.isDroppingOrLive || ItemMgr.isRequested(this.item)  },
          isNotAvailable() { 
             return ItemMgr.isHold(this.item) || ItemMgr.isInvoiced(this.item) || 
                ItemMgr.isClosed(this.item) || ItemMgr.isSold(this.item) 
          },
+         isAvailable() { return ItemMgr.isAvailable(this.item) },
+         isActive() { return this.isAvailable || this.isDroppingOrLive || ItemMgr.isRequested(this.item)  },
          isDropping() { return ItemMgr.isDropping(this.item) },
-			isDroppingOrLive() { return this.isDropping || ItemMgr.isLive(this.item) },  // both are stats with active bids
+			isDroppingOrLive() { return this.isDropping || ItemMgr.isLive(this.item) },  // both are states with active bids
          isBid() { return this.item.saleType == ItemSaleType.BID },
 			isBuy() { return this.item.saleType == ItemSaleType.BUY },			
 			isDrop() { return this.item.saleType == ItemSaleType.DROP },			
 			numberOfBids() { return this.item.bids ? Object.keys(this.item.bids).length : 0 },
 			currPrice() { return dollars(this.item.buyPrice > this.item.startPrice ? this.item.buyPrice : this.item.startPrice) },
 			priceText() { 
-            const prefix = this.isDroppingOrLive ? "Current Bid: " : "Price: "
+            let prefix = "Price: "
+            if (this.isBid && this.isAvailable) { prefix = "Opening Bid: " }
+            else if (this.isDroppingOrLive) { prefix = "Current Bid: " }
             return this.buildPriceText(prefix) 
          },
 			priceTextMini() { return this.buildPriceText("") + (this.isDropping && this.hasBids ? " (" + this.bidText + ")" : "") },

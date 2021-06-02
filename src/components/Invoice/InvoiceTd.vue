@@ -11,7 +11,7 @@
          <a v-if="hasTrackingLink" :href="trackingLink" target=”_blank”>{{ invoice.tracking }}</a>
          <span v-else>{{ invoice.tracking }}</span>
       </span>
-      <span v-else-if="col.name == 'date' || col.name == 'sentDate'">{{ sentDate }}</span>
+      <span v-else-if="col.name == 'sentDate'">{{ sentDate(col.value) }}</span>
       <span v-else>{{ col.value }}</span>
 
       <q-dialog v-model="showModal">
@@ -21,9 +21,8 @@
 </template>
 
 <script>
-   import { InvoiceMgr } from 'src/managers/InvoiceMgr.js'
-   import { formatDateOptYear } from 'src/utils/DateUtils'
-
+   import { InvoiceMgr } from 'src/managers/InvoiceMgr'
+   
 	export default {
       props: ['invoice', 'col'],
       data() {
@@ -32,14 +31,14 @@
 			}
 		},
       computed: {
-         sentDate() { 
-            return InvoiceMgr.isSending(this.invoice) || InvoiceMgr.isSendError(this.invoice) ? 
-               this.invoice.sendStatus : formatDateOptYear(this.invoice.sentDate) 
-         },         
          hasTrackingLink() { return InvoiceMgr.hasTrackingLink(this.invoice) },  
          trackingLink() { return InvoiceMgr.getTrackingLink(this.invoice) }, 
       },
 		methods: {
+         sentDate(colValue) { 
+            return InvoiceMgr.isSending(this.invoice) || InvoiceMgr.isSendError(this.invoice) ? 
+               this.invoice.sendStatus : colValue
+         },  
          showInvoice() { this.showModal = true },
       },
       components: {

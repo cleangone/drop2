@@ -36,6 +36,7 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.2.3  - 6/1/21",   // Add ToDo for sending created invoices.  Add sent/resent to invoice status  
    "v2.2.2  - 5/31/21",  // Fix vuexfire push update issue.  Roll drop items to buy after bid period, but not bid items  
    "v2.2.1  - 5/30/21",  // Vuexfire bind cart to a single doc, hold dropIds in cart for quicker item lookup   
    "v2.2.0  - 5/29/21",  // Remove Drop.saleType, SaleType.DROP takes place of BID, BID becomes manually controlled auction 

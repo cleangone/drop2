@@ -136,8 +136,8 @@
          ...mapGetters('current', ['currentActivityExists']),
          ...mapGetters('drop', ['getHomePageDrops']),
          ...mapGetters('error', ['visibleEmailErrorsExist']),
-         ...mapGetters('invoice', ['invoicesExist']),
-         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist', 'getItems']),
+         ...mapGetters('invoice', ['invoicesExist', 'createdInvoicesExist']),
+         ...mapGetters('item', ['requestedItemsExist', 'holdItemsExist', 'activeBidItemsExist', 'getItems']),
          ...mapGetters('user', ['getUser', 'isAdmin']),
          ...mapGetters('install', ['canInstallApp', 'installStatusExists', 'getInstallStatus']),
          drawerMini() { return this.$q.platform.is.mobile ? false : (!this.drawerLockedOpen && !this.drawerMouseover) },
@@ -207,7 +207,13 @@
             return null
          },
          userHasAlert() { return this.userAlert != null },
-         todosExist() { return this.requestedItemsExist || this.holdItemsExist || this.visibleEmailErrorsExist},
+         todosExist() { 
+            return this.requestedItemsExist || 
+               this.holdItemsExist || 
+               this.activeBidItemsExist ||
+               this.createdInvoicesExist ||
+               this.visibleEmailErrorsExist
+         },
          currentUserActionsExist() { 
             const yesterday = new Date().getTime() - 1000*60*60*24 // 24 hours ago in millis
             for (var action of this.getUserActions(this.userId)) {

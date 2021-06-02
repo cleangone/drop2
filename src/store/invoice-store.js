@@ -4,14 +4,15 @@ import { InvoiceSendStatus } from 'src/managers/InvoiceMgr'
 import { dateUid } from 'src/utils/Utils'
    
 const state = {   
-    invoices: [],
-    userInvoices: []
+   invoices: [],
+   createdInvoices: [],
+   userInvoices: []
 }
 
 const actions = {
    bindInvoices: firestoreAction(({ bindFirestoreRef }) => {
-      // console.log("bindInvoices")
       bindFirestoreRef('invoices', collection())
+      bindFirestoreRef('createdInvoices', collection().where('status', '==', "Created")) 
    }),
    bindUserInvoices: firestoreAction(({ bindFirestoreRef }, userId) => {
       // console.log("bindUserInvoices", userId)
@@ -39,6 +40,7 @@ function collection() { return firestore.collection('invoices') }
 
 const getters = {
    invoicesExist: state => { return state.invoices && state.invoices.length > 0 },
+   createdInvoicesExist: state => { return state.createdInvoices && state.createdInvoices.length > 0 },
    // userInvoicesExist: state => { return state.userInvoices && state.userInvoices.length > 0 },
    getInvoices: state => { 
       let invoices = []
@@ -48,6 +50,7 @@ const getters = {
 
       return invoices
    },
+   getCreatedInvoices: state => { return [...state.createdInvoices] },
    getUserInvoices: state => userId => {  // pass in userId as double-check
       const invoices = []
       for (var invoice of state.userInvoices) {

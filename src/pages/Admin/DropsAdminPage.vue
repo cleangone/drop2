@@ -40,10 +40,9 @@
 </template>
 
 <script>
-	import { date } from 'quasar'
-   import { mapGetters, mapActions } from 'vuex'
-   import { DropMgr, DropStatus, DropVisibleOrder } from 'src/managers/DropMgr.js';
-   import { ItemMgr } from 'src/managers/ItemMgr.js';
+	import { mapGetters, mapActions } from 'vuex'
+   import { DropMgr, DropStatus } from 'src/managers/DropMgr'
+   import { ItemMgr } from 'src/managers/ItemMgr'
    import { formatDateTimeOptYear, isFutureDate, localTimezone } from 'src/utils/DateUtils'
 
 	export default {

@@ -57,8 +57,9 @@
 <script>
 	import { mapGetters, mapActions } from 'vuex'
    import { UserMgr } from 'src/managers/UserMgr'   
-   import { InvoiceMgr, InvoiceSendStatus } from 'src/managers/InvoiceMgr'
+   import { InvoiceMgr } from 'src/managers/InvoiceMgr'
    import { dollars } from 'src/utils/Utils'
+   import { formatDateTimeOptYear, localTimezone } from 'src/utils/DateUtils'
    import { UI, Colors } from 'src/utils/Constants'
    
 	export default {
@@ -67,13 +68,16 @@
             showShipped: true,
 			   showEditModal: false,
 				tableDataFilter: '',
-            visibleColumns: ['userName', 'name', 'total', 'status', 'sentDate'],
+            visibleColumns: ['userName', 'name', 'createdDate', 'total', 'status', 'sentDate'],
  				columns: [
-               { name: 'userName', label: 'User',      align: 'left',   field: 'userFullName', sortable: true },
-					{ name: 'name',     label: 'Name',      align: 'left',   field: 'name',         sortable: true },
-					{ name: 'total',    label: 'Total',     align: 'right',  field: 'total',        sortable: true, format: val => dollars(val) },
-					{ name: 'status',   label: 'Status',    align: 'center', field: 'tempStatus',   sortable: true },
-               { name: 'sentDate', label: 'Sent Date', align: 'left',   field: 'sentDate',     sortable: true },
+               { name: 'userName',    label: 'User',   align: 'left',   field: 'userFullName', sortable: true },
+					{ name: 'name',        label: 'Name',   align: 'left',   field: 'name',         sortable: true },
+					{ name: 'createdDate', label: 'Created ' + localTimezone(), 
+                                                       align: 'center', field: 'createdDate',  sortable: true, format: val => formatDateTimeOptYear(val) },
+					{ name: 'total',       label: 'Total',  align: 'right',  field: 'total',        sortable: true, format: val => dollars(val) },
+					{ name: 'status',      label: 'Status', align: 'center', field: 'status',       sortable: true },
+               { name: 'sentDate',    label: 'Sent ' + localTimezone(), 
+                                                       align: 'center', field: 'sentDate',     sortable: true, format: val => formatDateTimeOptYear(val) },
             ],
             pagination: { rowsPerPage: 30 },
             invoiceIdToEdit: '',
@@ -88,11 +92,7 @@
             const displayInvoices = []
             for (var invoice of this.getInvoices ) {
                if (this.showShipped || !InvoiceMgr.isShipped(invoice)) {
-                  const displayInvoice = Object.assign({}, invoice)
-                  displayInvoice.tempStatus = 
-                     InvoiceMgr.isCreated(invoice) && InvoiceMgr.isSent(invoice) ?   
-                     InvoiceSendStatus.SENT : displayInvoice.status
-                  displayInvoices.push(displayInvoice) 
+                  displayInvoices.push(invoice) 
                }
             }
             return displayInvoices

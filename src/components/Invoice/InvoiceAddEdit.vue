@@ -12,13 +12,13 @@
                :rows-per-page-options="[0]" pagination.sync="pagination" hide-header hide-bottom
                :dense="$q.screen.lt.md" class="q-mb-none">
                   
-               <template v-slot:bottom-row >
+               <template v-slot:bottom-row>
                   <q-tr>
                      <q-td class="bg-grey-2">Sub-Total</q-td>
                      <q-td class="bg-grey-2" align=right>{{ subtotal }}</q-td>
                   </q-tr>
                   <q-tr>
-                     <q-td> Shipping</q-td>
+                     <q-td>Shipping</q-td>
                      <q-td align=right>{{ shippingCharge }}</q-td>
                   </q-tr>
                   <q-tr v-if="invoiceToSubmit.priceAdjustment">
@@ -36,7 +36,7 @@
     </q-card-section>
 
     <q-card-section>
-    	<div v-if="isCreatedOrRevised" class="row q-mb-sm q-gutter-sm">
+    	<div v-if="canAdjustPrice" class="row q-mb-sm q-gutter-sm">
          <q-input v-model.number="invoiceToSubmit.shippingCharge" label="Shipping" type=number prefix="$" filled class="col" />
 			<q-input v-model.number="invoiceToSubmit.priceAdjustment" label="(Price Adjustment)" type=number prefix="$" filled class="col" />
 		</div>
@@ -58,8 +58,7 @@
 </template>
 
 <script>
-	import { date } from 'quasar'
-   import { mapGetters, mapActions } from 'vuex'
+	import { mapGetters, mapActions } from 'vuex'
    import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
    import { InvoiceMgr, InvoiceStatus } from 'src/managers/InvoiceMgr'
    import { UI } from 'src/utils/Constants'
@@ -72,22 +71,24 @@
             user: null, 
             userAddress: null, 
             invoiceError: null,
-				invoiceToSubmit: {
-               name: '',  // created date and first item
+            invoiceToSubmit: {
+               name: '', 
                createdDate: new Date(),
                userId: null,
-               items: [], // itemId, name, price
+               items: [], // { id, name, buyDate, buyPrice }
                status: InvoiceStatus.CREATED,
+               history: [], // { date, status }
                subTotal: 0,
                shippingCharge: 25,
                priceAdjustment: 0
             },
-            statusOptions: [ InvoiceStatus.REVISED, InvoiceStatus.PAID_FULL, InvoiceStatus.SHIPPED ],
+            statusOptions: [ InvoiceStatus.REVISED, InvoiceStatus.PAID, InvoiceStatus.SHIPPED ],
+            adjustableStatus: [ InvoiceStatus.CREATED, InvoiceStatus.SENT, InvoiceStatus.REVISED, InvoiceStatus.RESENT ],
             carrierOptions: InvoiceMgr.getCarriers(),
             visibleColumns: [ 'name', 'price'],
  				columns: [
-        			{ name: 'name',  label: 'Item Name', align: 'left', field: 'name' },
-				 	{ name: 'price', label: 'Price',     align: 'right', field: 'price', format: val => val ? dollars(val) : '' },
+        			{ name: 'name',  label: 'Item',  align: 'left',  field: 'name' },
+				 	{ name: 'price', label: 'Price', align: 'right', field: 'buyPrice', format: val => val ? dollars(val) : '' },
             ],
 			}
 		},
@@ -95,8 +96,7 @@
          ...mapGetters('setting', ['getSetting']),
          ...mapGetters('user', ['getUser']),
          isEdit() { return this.type == UI.EDIT },	
-         isCreatedOrRevised() {
-            return InvoiceMgr.isCreated(this.invoiceToSubmit) || InvoiceMgr.isRevised(this.invoiceToSubmit) },	
+         canAdjustPrice() { return this.adjustableStatus.includes(this.invoiceToSubmit.status) },
          isShipped() { return InvoiceMgr.isShipped(this.invoiceToSubmit) },	
          subtotal() { return dollars(this.invoiceToSubmit.subTotal) },
          shippingCharge() { return dollars(this.invoiceToSubmit.shippingCharge) },
@@ -119,16 +119,22 @@
                    this.invoiceToSubmit.carrier != this.invoice.carrier ||
                    this.invoiceToSubmit.tracking != this.invoice.tracking ) 
                {
-                  if (this.invoiceToSubmit.shippingCharge != this.invoice.shippingCharge ||
-                      this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment) {
+                  const processedDate = new Date()
+                  if ((this.invoiceToSubmit.shippingCharge != this.invoice.shippingCharge) ||
+                      (this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment)) {
                      this.invoiceToSubmit.status = InvoiceStatus.REVISED
-                     this.invoiceToSubmit.revisedDate = new Date() 
+                     this.invoiceToSubmit.revisedDate = processedDate
+                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.REVISED)
                   }
-                  if (InvoiceMgr.isPaidFull(this.invoiceToSubmit)) {
-                     this.invoiceToSubmit.paidDate = new Date()
+
+                  if (InvoiceMgr.isPaid(this.invoiceToSubmit) && !InvoiceMgr.isPaid(this.invoice)) {
+                     this.invoiceToSubmit.paidDate = processedDate
+                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.PAID)
                   }
-                  if (InvoiceMgr.isShipped(this.invoiceToSubmit)) {
-                     this.invoiceToSubmit.shippedDate = new Date()
+                   
+                  if (InvoiceMgr.isShipped(this.invoiceToSubmit) && !InvoiceMgr.isShipped(this.invoice)) {
+                     this.invoiceToSubmit.shippedDate = processedDate
+                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.SHIPPED)
                   }
 
                   InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSetting)
@@ -142,7 +148,8 @@
                   this.updateItem({ id: item.id, status: ItemStatus.INVOICED })
                }
             }
-			}
+			},
+         addHistory(invoice, date, status) { invoice.history.push({ date: date, status: status }) },
       },
 		created() {
          // slight delay because param update propagating as modal being popped up
@@ -153,6 +160,8 @@
                this.invoiceToSubmit = Object.assign({}, this.invoice) 
             }
             else {
+               this.addHistory(this.invoiceToSubmit, this.invoiceToSubmit.createdDate, InvoiceStatus.CREATED)
+
                for (var item of this.items) {
                   if (!item.buyerId) { 
                      this.invoiceError = "Not all items have a buyer" 
@@ -170,9 +179,9 @@
                   }
 
                   this.invoiceToSubmit.items.push(
-                     { id: item.id, name: item.name, date: item.buyDate, price: item.buyPrice }) 
+                     { id: item.id, name: item.name, buyDate: item.buyDate, buyPrice: item.buyPrice }) 
                   this.invoiceToSubmit.subTotal += item.buyPrice
-               }
+               }            
             }
 
             this.user = this.getUser(this.invoiceToSubmit.userId)

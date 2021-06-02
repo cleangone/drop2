@@ -1,31 +1,37 @@
+import { UserMgr } from './UserMgr'   
+import { format_M_DD_YY, format_MMM_D_YYYY, toMillis } from 'src/utils/DateUtils'
 import { dollars } from 'src/utils/Utils'
-import { format_M_DD_YY, format_MMM_D, format_MMM_D_YYYY, toMillis } from 'src/utils/DateUtils'
       
-
 /*
    invoice
       id
       name
-      items[ { id, name, price } ]
+      items[ { id, name, buyDate, buyPrice }]
       userId
       userFullName
-      status: created, revised, paid in full, partial payment, shipped
-      sendStatus: sending, sent
+      status: InvoiceStatus
+      sendStatus: InvoiceSendStatus
+      sentDate
+      history [ { status, date }]
       html
       subTotal
       shippingCharge
       priceAdjustment
       total
       createdDate
+      paidDate
+      shippedDate
       updatedDate
 */
 
 export const InvoiceStatus = {
-   CREATED:      'Created',
-   REVISED:      'Revised',
-   PAID_FULL:    'Paid in Full',
-   PAID_PARTIAL: 'Partial Payment',
-   SHIPPED:      'Shipped',
+   CREATED:     'Created',
+   SENT:        'Sent',
+   REVISED:     'Revised',
+   RESENT:      'Resent',
+   PAID:        'Paid in Full',
+   PARTIAL_PAY: 'Partial Payment',
+   SHIPPED:     'Shipped',
 }
 
 export const InvoiceSendStatus = {
@@ -43,7 +49,7 @@ export class InvoiceMgr {
    
    static isCreated(invoice)  { return invoice.status == InvoiceStatus.CREATED }
    static isRevised(invoice)  { return invoice.status == InvoiceStatus.REVISED }
-   static isPaidFull(invoice) { return invoice.status == InvoiceStatus.PAID_FULL }
+   static isPaid(invoice)     { return invoice.status == InvoiceStatus.PAID }
    static isShipped(invoice)  { return invoice.status == InvoiceStatus.SHIPPED }
    static isSending(invoice)  { return invoice.sendStatus == InvoiceSendStatus.SENDING }
    static isSent(invoice)     { return invoice.sendStatus == InvoiceSendStatus.SENT }
@@ -75,7 +81,7 @@ export class InvoiceMgr {
    static getDetails(invoice) { 
       let details = []
       for (var item of invoice.items) {
-         details.push({ name: item.name, price: dollars(item.price) })
+         details.push({ name: item.name, price: dollars(item.buyPrice) })
       }
 
       details.push({ name: "Shipping", price: dollars(invoice.shippingCharge) })
@@ -85,27 +91,23 @@ export class InvoiceMgr {
    }
           
    static finalize(invoice, user, setting) { 
-      invoice.name = 
-         (invoice.revisedDate ? format_MMM_D(invoice.revisedDate) : format_MMM_D(invoice.createdDate)) + ": " +
-         invoice.items[0].name + 
-         (invoice.items.length > 1 ? "..." : "")
-
+      invoice.name = (invoice.revisedDate ? "Revised " : "") + "Invoice: " + invoice.items[0].name
+      if (invoice.items.length == 2) { invoice.name += ", one other"} 
+      else if (invoice.items.length > 2) { invoice.name += ", others"} 
+         
       invoice.total = invoice.subTotal + invoice.shippingCharge - invoice.priceAdjustment 
       InvoiceMgr.setUserFullName(invoice, user)
       InvoiceMgr.setHtml(invoice, user, setting)   
    }
    
-   static setUserFullName(invoice, user) { 
-      invoice.userFullName = (user.firstName || user.lastName) ?
-         (user.firstName ? user.firstName : "") + (user.firstName && user.lastName ? " " : "") + (user.lastName ? user.lastName : "") :
-         user.authEmailCopy
-   }
+   static setUserFullName(invoice, user) { invoice.userFullName = UserMgr.fullName(user) }
    
    static getUserHtml(invoice, user) { 
       // console.log("getUserHtml: user", user)
       let html = []      
       html.push(
          div(invoice.userFullName) +
+         div(UserMgr.getEmail(user))  +
          div(user.address ? user.address : "ADDRESS" )  +
          div((user.city ? user.city : "CITY") + ", " + (user.state ? user.state : "STATE")) +
          div(user.zip ? user.zip : "ZIP" ) +
@@ -124,14 +126,13 @@ export class InvoiceMgr {
          format_MMM_D_YYYY(invoice.revisedDate)  + " (Revised)":
          format_MMM_D_YYYY(invoice.createdDate)
       
-
       let paypal = "" 
       if (setting.paypal) {
          let paypalLink = setting.paypal 
          if (paypalLink.toLowerCase().startsWith("https://")) { paypalLink = paypalLink.substring(0, 8) }
          if (paypalLink.toLowerCase().startsWith("http://"))  { paypalLink = paypalLink.substring(0, 7) }
 
-         paypal =  a(paypalLink, "https://" + paypalLink)
+         paypal = a(paypalLink, "https://" + paypalLink)
       }
       
       html.push(
@@ -145,9 +146,9 @@ export class InvoiceMgr {
       let detailRows = []
       for (var item of invoice.items) {
          detailRows.push(tr(
-            td(format_M_DD_YY(item.date), "width=10%") + 
+            td(format_M_DD_YY(item.buyDate), "width=10%") + 
             td(item.name) + 
-            tdRight(dollars(item.price))))
+            tdRight(dollars(item.buyPrice))))
       }
 
       const line = tr(td(hr(), "colspan=3"))
@@ -165,7 +166,7 @@ export class InvoiceMgr {
       html.push(itemsTable)
 
       let note = setting.invoiceNote
-      if (InvoiceMgr.isPaidFull(invoice)) { note = "" }
+      if (InvoiceMgr.isPaid(invoice)) { note = "" }
       else if (InvoiceMgr.isShipped(invoice)) {
          note = "Items shipped. "
          if (InvoiceMgr.hasTrackingLink(invoice)) { 

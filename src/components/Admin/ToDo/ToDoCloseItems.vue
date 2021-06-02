@@ -32,12 +32,10 @@
             visibleColumns: [ 'name', 'drop', 'price', 'bids'],
  				columns: [
         			{ name: 'id',                                     field: 'id' },
-				 	{ name: 'name',  label: 'Name',  align: 'left',   field: 'name',     sortable: true },
-				 	{ name: 'drop',  label: 'Drop',  align: 'center',                    sortable: true },
-				 	{ name: 'price', label: 'Start/Final Price', align: 'right',         sortable: true },
-					{ name: 'bids',  label: 'Bids',  align: 'center',                    sortable: true },
-					
-            
+				 	{ name: 'name',  label: 'Name',  align: 'left',   field: 'name', sortable: true },
+				 	{ name: 'drop',  label: 'Drop',  align: 'center',                sortable: true },
+				 	{ name: 'price', label: 'Start/Final Price', align: 'right',     sortable: true },
+					{ name: 'bids',  label: 'Bids',  align: 'center',                sortable: true },
             ],
             selectedRows: [],
             pagination: { rowsPerPage: 20 },
