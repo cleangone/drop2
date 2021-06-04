@@ -7,8 +7,6 @@
 </template>
 
 <script>
-   import { mapGetters } from 'vuex'
-   
 	export default {
 		props: ['invoice'],
 		computed: {	
@@ -18,7 +16,6 @@
 			close() { this.$emit('close') }
       }   
    }
-
 </script>
 
 <style>

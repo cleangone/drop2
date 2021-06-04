@@ -1,26 +1,27 @@
 import { firestoreAction } from 'vuexfire'
 import { firestore } from 'boot/firebase'
 
+const SETTINGS_ID =  "0"
+
 const state = {
-	settings: [],
+	settings: {},
 }
 
 const actions = {
    bindSettings: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef('settings', collection())
+      return bindFirestoreRef('settings', collection().doc(SETTINGS_ID))
    }),
-   setSetting: firestoreAction((context, setting) => {
-      if (!setting.id) { setting.id = "0" }
-      console.log("setSetting", setting)
+   setSettings: firestoreAction((context, setting) => {
+      if (!setting.id) { setting.id = SETTINGS_ID }
       collection().doc(setting.id).set(setting)
    }),
 }
 
-function collection() { return firestore.collection('settings') }
-
 const getters = {
-   getSetting: state => { return (state.settings && state.settings.length > 0) ? state.settings[0] : {} }
+   getSettings: state => { return state.settings ? state.settings : {} }
 }
+
+function collection() { return firestore.collection('settings') }
 
 export default {
 	namespaced: true,

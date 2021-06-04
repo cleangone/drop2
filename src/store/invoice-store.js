@@ -69,6 +69,14 @@ const getters = {
 
       return null
   },
+  getUserInvoice: state => (userId, invoiceId) => {  
+      for (var invoice of state.userInvoices) {
+         if (invoice.id == invoiceId && invoice.userId == userId) { 
+            return invoice
+         }
+      }
+      return null
+   }
 }
 
 export default {

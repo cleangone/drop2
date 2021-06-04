@@ -1,4 +1,3 @@
-
 /*
    settings:
       id (unused)
@@ -23,12 +22,6 @@ export const PurchaseReqProcessingType = {
    MANUAL:    'Manual',
 }
 
-export const EmailType = {
-   PURCHASE_SUCCESS: 'emailPurchaseSuccess',
-   PURCHASE_FAIL:    'emailPurchaseFail',
-   WINNING_BID:      'winningBid',
-}
-
 export const EmailFieldSuffix = {
    SUBJECT: 'Subject',
    BODY: 'Body',
@@ -36,9 +29,10 @@ export const EmailFieldSuffix = {
 
 export class SettingsMgr {  
    static isAutoPurchaseReqProcessing(settings)           { return settings.purchaseReqProcessingType == PurchaseReqProcessingType.AUTOMATIC }   
-   static getPurchaseSuccessEmailSetting(settings, label) { return this.getEmailSetting(settings, EmailType.PURCHASE_SUCCESS, label) }
-   static getPurchaseFailEmailSetting(settings, label)    { return this.getEmailSetting(settings, EmailType.PURCHASE_FAIL, label) }
-   static getWinningBidEmailSetting(settings, label)      { return this.getEmailSetting(settings, EmailType.WINNING_BID, label) } 
+   static getPurchaseSuccessEmailSetting(settings, label) { return this.getEmailSetting(settings, 'emailPurchaseSuccess', label) }
+   static getPurchaseFailEmailSetting(settings, label)    { return this.getEmailSetting(settings, 'emailPurchaseFail', label) }
+   static getWinningBidEmailSetting(settings, label)      { return this.getEmailSetting(settings, 'emailWinningBid', label) } 
+   static getInvoiceEmailSetting(settings, label)         { return this.getEmailSetting(settings, 'emailInvoice', label) } 
 
    static getEmailSetting(settings, emailType, label) { 
       return { 

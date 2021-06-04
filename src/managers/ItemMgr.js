@@ -1,5 +1,3 @@
-import { Config } from 'boot/Config'
-   
 /*
    item
       id

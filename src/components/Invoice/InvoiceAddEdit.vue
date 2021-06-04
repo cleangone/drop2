@@ -93,7 +93,7 @@
 			}
 		},
 		computed: {	
-         ...mapGetters('setting', ['getSetting']),
+         ...mapGetters('setting', ['getSettings']),
          ...mapGetters('user', ['getUser']),
          isEdit() { return this.type == UI.EDIT },	
          canAdjustPrice() { return this.adjustableStatus.includes(this.invoiceToSubmit.status) },
@@ -129,6 +129,7 @@
 
                   if (InvoiceMgr.isPaid(this.invoiceToSubmit) && !InvoiceMgr.isPaid(this.invoice)) {
                      this.invoiceToSubmit.paidDate = processedDate
+                     this.invoiceToSubmit.amountPaid = invoiceToSubmit.total
                      this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.PAID)
                   }
                    
@@ -137,12 +138,12 @@
                      this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.SHIPPED)
                   }
 
-                  InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSetting)
+                  InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
                   this.setInvoice(this.invoiceToSubmit)
                }
             }
             else { 
-               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSetting)
+               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
                this.createInvoice(this.invoiceToSubmit)
                for (var item of this.items) {
                   this.updateItem({ id: item.id, status: ItemStatus.INVOICED })
@@ -188,7 +189,7 @@
             // console.log("created", this.user)
             if (!this.isEdit) { 
                InvoiceMgr.setUserFullName(this.invoiceToSubmit, this.user) 
-               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSetting)
+               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
             }
             // console.log("Creating invoice", this.invoiceToSubmit)
             

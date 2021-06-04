@@ -16,23 +16,21 @@
 					</q-input>
             </template>
             <q-td slot="body-cell-name" slot-scope="props" :props="props"> 
-               <a :href="'#/item/' + props.row.itemId">{{ props.value }}</a>
+               <a v-if="props.row.itemId" :href="'#/item/' + props.row.itemId">{{ props.value }}</a>
+	            <a v-else-if="props.row.invoiceId" :href="'#/invoice/' + props.row.invoiceId">{{ props.value }}</a>
+	            <span v-else>{{ props.value }}</span>
 	         </q-td> 
             <q-td slot="body-cell-amount" slot-scope="props" :props="props"> 
                {{ props.value }} {{ maxAmount(props.row) }}
 	         </q-td> 
-            <q-td slot="body-cell-bids" slot-scope="props" :props="props"> 
-               <a v-if="bids(props.row.itemId)" :href="'#/bids/' + props.row.itemId">{{ bids(props.row.itemId) }}</a>
-	         </q-td>
 			</q-table>
 		</div>
   	</q-page>
 </template>
 
 <script>
-	import { date } from 'quasar'
-   import { mapGetters, mapActions } from 'vuex'
-   import { ActionMgr } from 'src/managers/ActionMgr.js'
+	import { mapGetters, mapActions } from 'vuex'
+   import { ActionMgr } from 'src/managers/ActionMgr'
    import { dollars } from 'src/utils/Utils'
    import { format_MMM_DD_optYYYY_h_mm_ss } from 'src/utils/DateUtils'
 
@@ -41,12 +39,11 @@
 	  		return {
             showOnlyWins: false,
 				tableDataFilter: '',
-				visibleColumns: [ 'name', 'amount', 'result', 'bids', 'date'],
+				visibleColumns: [ 'name', 'amount', 'result', 'date'],
  				columns: [
-               { name: 'name',   label: 'Item',   align: 'left',   field: 'itemName',     sortable: true },
-				 	{ name: 'amount', label: 'Amount', align: 'center',  field: 'amount',       sortable: true, format: val => dollars(val) },
+               { name: 'name',   label: 'Name',   align: 'left',   field: 'tempName',     sortable: true },
+				 	{ name: 'amount', label: 'Amount', align: 'center', field: 'amount',       sortable: true, format: val => dollars(val) },
 					{ name: 'result', label: 'Result', align: 'center', field: 'actionResult', sortable: true },
-				 	{ name: 'bids',   label: 'Bids',   align: 'center' },
 				 	{ name: 'date',   label: 'Date',   align: 'center', field: 'createdDate',  sortable: true, format: val => format_MMM_DD_optYYYY_h_mm_ss(val) }
             ],
             pagination: { rowsPerPage: 20 },
@@ -54,29 +51,27 @@
       },
 		computed: {
 			...mapGetters('auth', ['userId']),
-         ...mapGetters('action', ['actionsExist', 'getUserActions']),
-         ...mapGetters('item', ['getItems']),			
-         userActions() { return this.getUserActions(this.userId) },
-         itemIds() { 
-            let itemIds = new Set()
-            this.userActions.forEach(action => { itemIds.add(action.itemId) })
-            return Array.from(itemIds)
-         },
-         items() { return this.getItems(this.itemIds) },
-         itemActions() { 
-            let itemIds = new Set()
-            let actions = []
-            this.userActions.forEach(action => { 
-               if (!itemIds.has(action.itemId)) {
-                  itemIds.add(action.itemId)
-                  actions.push(action)
+         ...mapGetters('action', ['getUserActions']),
+         userActions() { 
+            const actions = this.getUserActions(this.userId) 
+            actions.sort((a, b) => (a.createdDate > b.createdDate) ? -1 : 1)
+         
+            let ids = new Set()
+            let tempActions = []
+            actions.forEach(action => { 
+               const refId = action.itemId ? action.itemId : action.invoiceId 
+               if (!ids.has(refId)) {
+                  ids.add(refId)
+                  const tempAction = Object.assign({}, action) 
+                  tempAction.tempName = tempAction.itemName ? tempAction.itemName : tempAction.invoiceName 
+                  tempActions.push(tempAction)
                }
             })
-            return actions
+            return tempActions
          },
          displayActions() { 
             let displayActions = []
-            this.itemActions.forEach(action => { 
+            this.userActions.forEach(action => { 
                if (!this.showOnlyWins || ActionMgr.isWinningBid(action) || ActionMgr.isPurchased(action)) { 
                   displayActions.push(Object.assign({}, action)) }
             })
@@ -84,22 +79,9 @@
          },
       },
       methods: {
-         ...mapActions('action', ['bindActions']),
-         bids(itemId) {
-            for (var item of this.items) {
-               if (item.id == itemId) { return item.numberOfBids ? item.numberOfBids : 0 }
-            }
-            return 0
-         },
-         log(val) { 
-            console.log(val) 
-         },
          maxAmount(action) { 
             return (ActionMgr.isWinningBid(action) && (action.maxAmount != action.amount) ?  "(" + dollars(action.maxAmount)  + " max)": "") 
          }
       },
-      created() {
-         if (!this.actionsExist) { this.bindActions() }
-      }
 	}
 </script>

@@ -20,7 +20,7 @@
 	export default {
       computed: {
          ...mapGetters('drop', ['getDrops', 'getPrimaryDrops', 'getSecondaryDrops']),
-         ...mapGetters('setting', ['getSetting']),
+         ...mapGetters('setting', ['getSettings']),
          ...mapGetters('color', Colors),
 
          // todo - doesn't work because drop image width drives col
@@ -35,7 +35,7 @@
          primaryDrops() {return this.sortDrops(this.getPrimaryDrops) }, 
          secondaryDrops() { return this.sortDrops(this.getSecondaryDrops) }, 
          hasTwitterId() { return this.twitterId && this.twitterId.length > 0 },
-         twitterId() { return this.getSetting.twitterId },
+         twitterId() { return this.getSettings.twitterId },
       },
       methods: {
          sortDrops(drops) { 

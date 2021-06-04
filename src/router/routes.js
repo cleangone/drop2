@@ -26,6 +26,7 @@ const routes = [
          createRoute('/favorites',           'User/FavoritesPage',       Route.FAVORITE),
          createRoute('/actions',             'User/ActionsPage'),
          createRoute('/invoices',            'User/InvoicesPage'),
+         createRoute('/invoice/:id',         'User/InvoicePage'),
          createAdminRoute('/todo',           'ToDoAdminPage',            Route.TODO),
          createAdminRoute('/drops',          'DropsAdminPage'),
          createAdminRoute('/dropitems/:id',  'DropItemsAdminPage'),

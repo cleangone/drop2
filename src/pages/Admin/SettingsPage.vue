@@ -5,12 +5,12 @@
 			<q-card-section>
 				<div class="row q-mb-sm q-gutter-sm">
                <q-input v-model="settingToUpdate.companyName" label="Company Name" filled class="col-4" />
-				   <q-input v-model="settingToUpdate.fromEmail" label="From Email Address" filled class="col-4" />
-               <q-input v-model="settingToUpdate.siteUrl" label="Site URL" filled class="col" />   
+				   <q-input v-model="settingToUpdate.fromEmail" label="Email From Address" filled class="col-4" />
+               <q-input v-model="settingToUpdate.twitterId" label="Twitter ID" filled class="col" />   
             </div>
             <div class="row q-mb-sm q-gutter-sm">
-            	<q-input v-model="settingToUpdate.paypal" label="Paypal Address" filled class="col-4" />
-               <q-input v-model="settingToUpdate.twitterId" label="Twitter ID" filled class="col-4" />
+            	<q-input v-model="settingToUpdate.siteUrl" label="Site URL" filled class="col-4" />
+               <q-input v-model="settingToUpdate.ccEmail" label="Email CC" filled class="col-4" />
                <q-select v-model="settingToUpdate.purchaseReqProcessingType" label="Purchase Req Processing" :options="reqProcessingOptions" filled class="col"/>
             </div>
             <div class="row q-mb-sm q-gutter-sm">
@@ -49,12 +49,12 @@
          }
 		},
 		computed: {
-         ...mapGetters('setting', ['getSetting']),
+         ...mapGetters('setting', ['getSettings']),
 		},
 		methods: {
-			...mapActions('setting', ['setSetting']),
+			...mapActions('setting', ['setSettings']),
          reset() { 
-            this.settingToUpdate = Object.assign({}, this.getSetting) 
+            this.settingToUpdate = Object.assign({}, this.getSettings) 
             this.emailPurchaseSuccess = SettingsMgr.getPurchaseSuccessEmailSetting(this.settingToUpdate, "Successful Purchase Request")
             this.emailPurchaseFail    = SettingsMgr.getPurchaseFailEmailSetting(this.settingToUpdate, "Failed Purchase Request")
             this.emailWinningBid      = SettingsMgr.getWinningBidEmailSetting(this.settingToUpdate, "Winning Bid")
@@ -63,7 +63,7 @@
             SettingsMgr.setEmailSettings(this.settingToUpdate, this.emailPurchaseSuccess)
             SettingsMgr.setEmailSettings(this.settingToUpdate, this.emailPurchaseFail)
             SettingsMgr.setEmailSettings(this.settingToUpdate, this.emailWinningBid)
-            this.setSetting(this.settingToUpdate)
+            this.setSettings(this.settingToUpdate)
          },
       },
       components: {

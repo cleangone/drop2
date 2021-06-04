@@ -97,7 +97,8 @@ export class InvoiceMgr {
          
       invoice.total = invoice.subTotal + invoice.shippingCharge - invoice.priceAdjustment 
       InvoiceMgr.setUserFullName(invoice, user)
-      InvoiceMgr.setHtml(invoice, user, setting)   
+      InvoiceMgr.setHtmlSections(invoice, user, setting)   
+      InvoiceMgr.setHtml(invoice)   
    }
    
    static setUserFullName(invoice, user) { invoice.userFullName = UserMgr.fullName(user) }
@@ -108,44 +109,34 @@ export class InvoiceMgr {
       html.push(
          div(invoice.userFullName) +
          div(UserMgr.getEmail(user))  +
-         div(user.address ? user.address : "ADDRESS" )  +
-         div((user.city ? user.city : "CITY") + ", " + (user.state ? user.state : "STATE")) +
-         div(user.zip ? user.zip : "ZIP" ) +
+         (user.address ? div(user.address) : "" ) + 
+         (user.city || user.state ? 
+            div((user.city ? user.city : "") + 
+                (user.city && user.state ? ", " : "") + 
+                (user.state ? user.state : "")
+            ) : 
+            "" ) + 
+         (user.zip ? div(user.zip) : "" ) + 
          (user.country ? div(user.country) : "" )
       )
 
       return html.join("")
    }
 
-   static setHtml(invoice, user, setting) { 
-      // console.log("setHtml: user", user)
-      // console.log("setHtml: setting", setting)
-      let html = []
-      
+   static setHtmlSections(invoice, user, setting) { 
       let date = invoice.revisedDate ? 
          format_MMM_D_YYYY(invoice.revisedDate)  + " (Revised)":
          format_MMM_D_YYYY(invoice.createdDate)
       
-      let paypal = "" 
-      if (setting.paypal) {
-         let paypalLink = setting.paypal 
-         if (paypalLink.toLowerCase().startsWith("https://")) { paypalLink = paypalLink.substring(0, 8) }
-         if (paypalLink.toLowerCase().startsWith("http://"))  { paypalLink = paypalLink.substring(0, 7) }
-
-         paypal = a(paypalLink, "https://" + paypalLink)
+      invoice.htmlSections = {
+         date: div(date),
+         company: div(a(setting.companyName, setting.siteUrl), right()), 
+         user: InvoiceMgr.getUserHtml(invoice, user),
       }
       
-      html.push(
-         div(date) + 
-         div(a(setting.companyName, setting.siteUrl), right()) + 
-         div(paypal, right()) +
-         br() + br() + 
-         InvoiceMgr.getUserHtml(invoice, user) + 
-         br())
-      
-      let detailRows = []
+      const itemRows = []
       for (var item of invoice.items) {
-         detailRows.push(tr(
+         itemRows.push(tr(
             td(format_M_DD_YY(item.buyDate), "width=10%") + 
             td(item.name) + 
             tdRight(dollars(item.buyPrice))))
@@ -156,15 +147,13 @@ export class InvoiceMgr {
       const shipping = tr(td("") + td("Shipping") + tdRight(dollars(invoice.shippingCharge)))
       const adjustment = invoice.priceAdjustment == 0 ? "" : tr(td("") + td("Adjustment") +  tdRight("(" + dollars(invoice.priceAdjustment) + ")"))
       const total = tr(td("") + td(b("Total")) + tdRight(b(dollars(invoice.total))))
-      let paidLine = invoice.paidDate ? line : ""
-      let amountPaid = invoice.paidDate ? tr(td("") + td("Amount Paid") + tdRight(dollars(invoice.total))) : ""
-      let amountRemaing = invoice.paidDate ? tr(td("") + td(b("Amount Remaining")) + tdRight(b('0'))) : ""
+      invoice.htmlSections.items = itemRows.join("") + line + subtotal + shipping + adjustment + line + total 
       
-      let itemsTable = table(
-         detailRows.join("") + line + subtotal + shipping + adjustment + line + total + paidLine + amountPaid + amountRemaing, 
-         "width=100% style='border:1px solid'")
-      html.push(itemsTable)
-
+      const paidLine = invoice.paidDate ? line : ""
+      const amountPaid = invoice.paidDate ? tr(td("") + td("Amount Paid") + tdRight(dollars(invoice.amountPaid))) : ""
+      const amountRemaing = invoice.paidDate ? tr(td("") + td(b("Amount Remaining")) + tdRight(b('0'))) : ""
+      invoice.htmlSections.paid = paidLine + amountPaid + amountRemaing
+      
       let note = setting.invoiceNote
       if (InvoiceMgr.isPaid(invoice)) { note = "" }
       else if (InvoiceMgr.isShipped(invoice)) {
@@ -174,9 +163,20 @@ export class InvoiceMgr {
          }
          else if (invoice.tracking) { note += invoice.carrier + ", Tracking: " + invoice.tracking}
       }
-      html.push(br() + p(note))
+      invoice.htmlSections.note = p(note)
+   }
 
-      invoice.html = html.join("")
+   static setHtml(invoice) { 
+      invoice.html = 
+         invoice.htmlSections.date + 
+         invoice.htmlSections.company +
+         br() + br() + 
+         invoice.htmlSections.user + 
+         br() + 
+         table(invoice.htmlSections.items + invoice.htmlSections.paid, 
+            "width=100% style='border:1px solid'") +
+         br() + 
+         invoice.htmlSections.note
    }
 
    static setUpdated(invoice) { invoice.status = InvoiceStatus.UPDATED }

@@ -24,20 +24,24 @@ export const ActionType = {
    BID:          'Bid',
    PURCHASE_REQ: 'Purchase Request',
    ACCEPT_REQ:   'Accept Purchase Request',
+   INVOICE_PAY:  'Invoice Payment',
 }
 
+// result type 
 export const ActionResultType = {
-   LATE_BID:     'Late Bid',
-   HIGH_BID:     'High Bid',
-   INCREASED:    'Increased',
    OUTBID:       'Outbid',
    PURCHASED:    'Purchased',
-   ALREADY_SOLD: 'Already Sold',
-   WINNING_BID:  'Winning Bid',
+   WINNING_BID:  'Winning Bid', 
+   // following only needed by backend
+   // LATE_BID:     'Late Bid', 
+   // HIGH_BID:     'High Bid', 
+   // INCREASED:    'Increased', 
+   // ALREADY_SOLD: 'Already Sold', 
+   // PAID:         'Paid in Full',  
+   // PARTIAL_PAID: 'Partially Paid',
 }
 
 export class ActionMgr {
-   static initBid(action) { ActionMgr.init(action, ActionType.BID) }
    static initPurchaseReq(action) { ActionMgr.init(action, ActionType.PURCHASE_REQ) }
    static initAcceptReq(action) { ActionMgr.init(action, ActionType.ACCEPT_REQ) }
    static init(action, actionType) { 
