@@ -36,6 +36,7 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.3.1  - 6/6/21",   // Store, display paypal shipping info on invoice; verify email
    "v2.3.0  - 6/3/21",   // Initial paypal Integration for invoice payment - paypal sandbox only
    "v2.2.3  - 6/1/21",   // Add ToDo for sending created invoices.  Add sent/resent to invoice status  
    "v2.2.2  - 5/31/21",  // Fix vuexfire push update issue.  Roll drop items to buy after bid period, but not bid items  

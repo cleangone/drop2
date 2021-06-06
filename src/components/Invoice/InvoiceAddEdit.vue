@@ -6,7 +6,8 @@
     <q-card-section>
       <div v-if="invoiceError" class="text-red text-bold q-mt-sm">{{ invoiceError }}</div>
       <div v-else class="q-mt-sm">
-         <div v-html="userAddress" />
+         <div v-html="userHtml" />
+         <div v-if="paypalUserHtml" v-html="paypalUserHtml" class="q-my-lg"/>
          <div class="q-mt-sm">
             <q-table :columns="columns" :data="invoiceToSubmit.items" :visible-columns="visibleColumns" row-key="name"
                :rows-per-page-options="[0]" pagination.sync="pagination" hide-header hide-bottom
@@ -37,7 +38,7 @@
 
     <q-card-section>
     	<div v-if="canAdjustPrice" class="row q-mb-sm q-gutter-sm">
-         <q-input v-model.number="invoiceToSubmit.shippingCharge" label="Shipping" type=number prefix="$" filled class="col" />
+         <q-input v-model.number="invoiceToSubmit.shipping.shippingCharge" label="Shipping" type=number prefix="$" filled class="col" />
 			<q-input v-model.number="invoiceToSubmit.priceAdjustment" label="(Price Adjustment)" type=number prefix="$" filled class="col" />
 		</div>
       <div v-if="isEdit" class="row q-mb-none q-gutter-sm">
@@ -45,8 +46,8 @@
          <div class="col"/>
 		</div>
       <div v-if="isShipped" class="row q-mt-sm q-gutter-sm">
-         <q-select v-model="invoiceToSubmit.carrier" label="Carrier" :options="carrierOptions" class="col" filled/>
-         <q-input v-model="invoiceToSubmit.tracking" label="Tracking" filled class="col" />
+         <q-select v-model="invoiceToSubmit.shipping.carrier" label="Carrier" :options="carrierOptions" class="col" filled/>
+         <q-input v-model="invoiceToSubmit.shipping.tracking" label="Tracking" filled class="col" />
 		</div>
    </q-card-section>
 
@@ -69,7 +70,6 @@
 		data() {
 			return {
             user: null, 
-            userAddress: null, 
             invoiceError: null,
             invoiceToSubmit: {
                name: '', 
@@ -79,7 +79,7 @@
                status: InvoiceStatus.CREATED,
                history: [], // { date, status }
                subTotal: 0,
-               shippingCharge: 25,
+               shipping: { shippingCharge: 25 },
                priceAdjustment: 0
             },
             statusOptions: [ InvoiceStatus.REVISED, InvoiceStatus.PAID, InvoiceStatus.SHIPPED ],
@@ -96,12 +96,19 @@
          ...mapGetters('setting', ['getSettings']),
          ...mapGetters('user', ['getUser']),
          isEdit() { return this.type == UI.EDIT },	
+         userHtml() { 
+            return this.invoiceToSubmit.user ? InvoiceMgr.getUserHtml(this.invoiceToSubmit, this.user) : ""
+         },
+         paypalUserHtml() { 
+            return this.invoiceToSubmit.user ? InvoiceMgr.getPaypalUserHtml(this.invoiceToSubmit) : ""
+         },
          canAdjustPrice() { return this.adjustableStatus.includes(this.invoiceToSubmit.status) },
          isShipped() { return InvoiceMgr.isShipped(this.invoiceToSubmit) },	
          subtotal() { return dollars(this.invoiceToSubmit.subTotal) },
-         shippingCharge() { return dollars(this.invoiceToSubmit.shippingCharge) },
+         shippingCharge() { return dollars(this.invoiceToSubmit.shipping.shippingCharge) },
          priceAdjustment() { return "(" + dollars(this.invoiceToSubmit.priceAdjustment) + ")" },
-         total() { return dollars(this.invoiceToSubmit.subTotal + this.invoiceToSubmit.shippingCharge - this.invoiceToSubmit.priceAdjustment) }, 
+         total() { return dollars(
+            this.invoiceToSubmit.subTotal + this.invoiceToSubmit.shipping.shippingCharge - this.invoiceToSubmit.priceAdjustment) }, 
     	},
 		methods: {
 			...mapActions('invoice', ['createInvoice', 'setInvoice']),
@@ -114,13 +121,13 @@
             // console.log("persistInvoice", this.invoiceToSubmit)
             if (this.isEdit) { 
                if (this.invoiceToSubmit.status != this.invoice.status ||
-                   this.invoiceToSubmit.shippingCharge != this.invoice.shippingCharge ||
+                   this.invoiceToSubmit.shipping.shippingCharge != this.invoice.shipping.shippingCharge ||
                    this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment ||
                    this.invoiceToSubmit.carrier != this.invoice.carrier ||
                    this.invoiceToSubmit.tracking != this.invoice.tracking ) 
                {
                   const processedDate = new Date()
-                  if ((this.invoiceToSubmit.shippingCharge != this.invoice.shippingCharge) ||
+                  if ((this.invoiceToSubmit.shipping.shippingCharge != this.invoice.shipping.shippingCharge) ||
                       (this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment)) {
                      this.invoiceToSubmit.status = InvoiceStatus.REVISED
                      this.invoiceToSubmit.revisedDate = processedDate
@@ -129,7 +136,7 @@
 
                   if (InvoiceMgr.isPaid(this.invoiceToSubmit) && !InvoiceMgr.isPaid(this.invoice)) {
                      this.invoiceToSubmit.paidDate = processedDate
-                     this.invoiceToSubmit.amountPaid = invoiceToSubmit.total
+                     this.invoiceToSubmit.amountPaid = this.invoiceToSubmit.total
                      this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.PAID)
                   }
                    
@@ -158,7 +165,12 @@
             // console.log("created: isEdit", this.isEdit)
 
             if (this.isEdit) {
+               
+               console.log("invoice", this.invoice)
                this.invoiceToSubmit = Object.assign({}, this.invoice) 
+               console.log("invoiceToSubmit", this.invoiceToSubmit)
+               
+
             }
             else {
                this.addHistory(this.invoiceToSubmit, this.invoiceToSubmit.createdDate, InvoiceStatus.CREATED)
@@ -188,13 +200,9 @@
             this.user = this.getUser(this.invoiceToSubmit.userId)
             // console.log("created", this.user)
             if (!this.isEdit) { 
-               InvoiceMgr.setUserFullName(this.invoiceToSubmit, this.user) 
                InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
             }
-            // console.log("Creating invoice", this.invoiceToSubmit)
-            
-            this.userAddress = InvoiceMgr.getUserHtml(this.invoiceToSubmit, this.user)
-         }, 100)  
+        }, 100)  
 		}
    }
 </script>

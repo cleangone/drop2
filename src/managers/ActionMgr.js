@@ -21,10 +21,12 @@ export const ActionStatus = {
 }
 
 export const ActionType = {
-   BID:          'Bid',
-   PURCHASE_REQ: 'Purchase Request',
-   ACCEPT_REQ:   'Accept Purchase Request',
-   INVOICE_PAY:  'Invoice Payment',
+   BID:           'Bid',
+   PURCHASE_REQ:  'Purchase Request',
+   ACCEPT_REQ:    'Accept Purchase Request',
+   INVOICE_PAY:   'Invoice Payment',
+   VERIFY_EMAIL:  'Verify Email',
+   CONFIRM_EMAIL: 'Confirm Email Verification',
 }
 
 // result type 
@@ -49,6 +51,8 @@ export class ActionMgr {
       action.actionType = actionType
       action.createdDate = Date.now()
       action.status = ActionStatus.CREATED
+
+      return action
    }
 
    static isBid(action)        { return action.actionType == ActionType.BID }

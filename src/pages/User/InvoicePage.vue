@@ -4,7 +4,7 @@
       <div v-if="invoiceExists" :style="width">
          <q-card class="form-card q-ma-md">
             <q-card-section>
-               <div v-html="invoice.html" />
+               <div v-html="invoiceHtml" />
                <span v-if="isProcessingOrPaid" class="text-h2 absolute-center text-red text-weight-bolder">
                   {{ processingOrPaidText }}
                </span>
@@ -21,6 +21,7 @@
 
 <script>
 	import { mapGetters, mapActions } from 'vuex'
+   import { InvoiceMgr } from 'src/managers/InvoiceMgr'
    import { PayPalConfig } from 'boot/Config'
    
 	export default {
@@ -39,6 +40,7 @@
          user() { return this.getUser(this.userId)},
          width() { return "width:" + (this.$q.screen.width > 500 ? 500 : this.$q.screen.width-25) + "px" },
          invoice() { return this.getUserInvoice(this.userId, this.invoiceId) },
+         invoiceHtml() { return this.invoice ? InvoiceMgr.getHtml(this.invoice, this.getSettings) : "" },
          invoiceExists() { return this.invoice != null },
          isProcessingOrPaid() { return this.invoice.paidDate || this.isProcessing },
          processingOrPaidText() { return this.invoice.paidDate ? "PAID" : "PROCESSING" },
@@ -80,8 +82,9 @@
 
             const paypalPurchase = paypalOrder.purchase_units[0]
             const paypalAmount = parseInt(paypalPurchase.amount.value) 
-            if (paypalAmount != this.invoice.total) {
-               const msg = "Paypal error: expected Order amount to match " + this.invoice.total + ", instead was " + paypalOrder.purchase_units.amount.value
+            if (paypalAmount != this.invoice.total || paypalPurchase.amount.currency_code != "USD") {
+               const msg = "Paypal error: expected Order amount to match " + this.invoice.total + ", instead was " + 
+                  paypalOrder.purchase_units.amount.value + " " + paypalPurchase.amount.currency_code
                console.log(msg)
                alert(msg)
                return

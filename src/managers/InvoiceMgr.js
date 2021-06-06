@@ -8,14 +8,17 @@ import { dollars } from 'src/utils/Utils'
       name
       items[ { id, name, buyDate, buyPrice }]
       userId
-      userFullName
+      user { 
+         email
+         fullName
+         address { city, state, zip, country }
       status: InvoiceStatus
       sendStatus: InvoiceSendStatus
       sentDate
       history [ { status, date }]
       html
       subTotal
-      shippingCharge
+      shipping { shippingCharge, carrier, tracking, trackingLink }
       priceAdjustment
       total
       createdDate
@@ -56,20 +59,14 @@ export class InvoiceMgr {
    static isSendError(invoice){ return invoice.sendStatus == InvoiceSendStatus.ERROR }
    
    static getCarriers() { return [ InvoiceCarrier.USPS_PRIORITY, InvoiceCarrier.FEDEX ] }
-   static isUspsPriority(invoice) { return invoice.carrier == InvoiceCarrier.USPS_PRIORITY }
+   static isUspsPriority(invoice) { return invoice.shipping.carrier == InvoiceCarrier.USPS_PRIORITY }
    
+   static setUpdated(invoice) { invoice.status = InvoiceStatus.UPDATED }
+
    // todo - tracking has a lot of hardcoding
-   static hasTrackingLink(invoice) { 
-      return (invoice.tracking && invoice.tracking.length > 5 && InvoiceMgr.isUspsPriority(invoice)) 
-   }
-   static getTrackingLink(invoice) {  
-      if (InvoiceMgr.hasTrackingLink(invoice)) { 
-         return "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + invoice.tracking 
-      }
-      return ""
-   }     
-   
-   static hasTracking(invoice) { return invoice.carrier || invoice.tracking }
+   static hasTracking(invoice) { return invoice.shipping.carrier && invoice.shipping.tracking }
+   static hasTrackingLink(invoice) { return invoice.shipping.trackingLink != null }
+   static getTrackingLink(invoice) { return invoice.shipping.trackingLink }
    
    static needToResend(invoice) {
       return invoice.sentDate && 
@@ -84,56 +81,87 @@ export class InvoiceMgr {
          details.push({ name: item.name, price: dollars(item.buyPrice) })
       }
 
-      details.push({ name: "Shipping", price: dollars(invoice.shippingCharge) })
+      details.push({ name: "Shipping", price: dollars(invoice.shipping.shippingCharge) })
       if (invoice.priceAdjustment) { details.push({ name: "Adjustment", price: "(" + dollars(invoice.priceAdjustment) + ")" }) }
 
       return details 
    }
           
-   static finalize(invoice, user, setting) { 
+   static finalize(invoice, user) { 
       invoice.name = (invoice.revisedDate ? "Revised " : "") + "Invoice: " + invoice.items[0].name
       if (invoice.items.length == 2) { invoice.name += ", one other"} 
       else if (invoice.items.length > 2) { invoice.name += ", others"} 
          
-      invoice.total = invoice.subTotal + invoice.shippingCharge - invoice.priceAdjustment 
-      InvoiceMgr.setUserFullName(invoice, user)
-      InvoiceMgr.setHtmlSections(invoice, user, setting)   
-      InvoiceMgr.setHtml(invoice)   
+      invoice.total = invoice.subTotal + invoice.shipping.shippingCharge - invoice.priceAdjustment 
+     
+      if (!invoice.user) { invoice.user = {} }
+      invoice.user.fullName = UserMgr.fullName(user) 
+      invoice.user.email = UserMgr.getEmail(user)
+ 
+      if (!invoice.user.address) { invoice.user.address = {} }
+      invoice.user.address.usePayPalAddress = user.usePayPalAddress
+      if (user.address) { invoice.user.address.address = user.address }
+      if (user.city)    { invoice.user.address.city = user.city }
+      if (user.state)   { invoice.user.address.state = user.state }
+      if (user.zip)     { invoice.user.address.zip = user.zip }
+      if (user.country) { invoice.user.address.country = user.country }
+
+      if (invoice.shipping.tracking && InvoiceMgr.isUspsPriority(invoice)) {
+         invoice.shipping.trackingLink = 
+            "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + invoice.shipping.tracking 
+      }
+      else { invoice.shipping.trackingLink = null }
    }
-   
-   static setUserFullName(invoice, user) { invoice.userFullName = UserMgr.fullName(user) }
-   
-   static getUserHtml(invoice, user) { 
-      // console.log("getUserHtml: user", user)
-      let html = []      
-      html.push(
-         div(invoice.userFullName) +
-         div(UserMgr.getEmail(user))  +
-         (user.address ? div(user.address) : "" ) + 
-         (user.city || user.state ? 
-            div((user.city ? user.city : "") + 
-                (user.city && user.state ? ", " : "") + 
-                (user.state ? user.state : "")
+
+   static getUserHtml(invoice) { 
+      console.log("getUserHtml", invoice)
+      const address = invoice.user.address
+
+      const addressHtml = address.usePayPalAddress ? "" : 
+         (address.address ? div(address.address) : "" ) + 
+         (address.city || address.state ? 
+            div((address.city ? address.city : "") + 
+                (address.city && address.state ? ", " : "") + 
+                (address.state ? address.state : "")
             ) : 
             "" ) + 
-         (user.zip ? div(user.zip) : "" ) + 
-         (user.country ? div(user.country) : "" )
-      )
-
-      return html.join("")
+         (address.zip ? div(address.zip) : "" ) + 
+         (address.country ? div(address.country) : "" )
+   
+      return div(invoice.user.fullName) +
+         div(invoice.user.email)  +
+         addressHtml
    }
 
-   static setHtmlSections(invoice, user, setting) { 
+   static getPaypalUserHtml(invoice) { 
+      if (!invoice.shipping.paypal || !invoice.shipping.paypal.address) { return null }
+      
+      const fullName = invoice.shipping.paypal.name && invoice.shipping.paypal.name.full_name ?
+         invoice.shipping.paypal.name.full_name : null
+      const address = invoice.shipping.paypal.address
+      const paypalUserRow = tr(td(
+         b("PayPal Shipping Address")  +
+         (fullName ? div(fullName) : "") + 
+         div(address.address_line_1)  +
+         div(address.admin_area_2 + ", " + address.admin_area_1) +
+         div(address.postal_code) + 
+         (address.country_code == "US" ? "" : div(address.country_code)))) 
+
+      return table(paypalUserRow, "style='border:1px solid; padding:5px'")
+   }
+    
+   static getHtml(invoice, settings) { 
       let date = invoice.revisedDate ? 
          format_MMM_D_YYYY(invoice.revisedDate)  + " (Revised)":
          format_MMM_D_YYYY(invoice.createdDate)
-      
-      invoice.htmlSections = {
+   
+      const htmlSections = {
          date: div(date),
-         company: div(a(setting.companyName, setting.siteUrl), right()), 
-         user: InvoiceMgr.getUserHtml(invoice, user),
+         company: div(a(settings.companyName, settings.siteUrl), right()), 
+         user: InvoiceMgr.getUserHtml(invoice),
+         paypalUser: InvoiceMgr.getPaypalUserHtml(invoice)    
       }
-      
+
       const itemRows = []
       for (var item of invoice.items) {
          itemRows.push(tr(
@@ -141,57 +169,55 @@ export class InvoiceMgr {
             td(item.name) + 
             tdRight(dollars(item.buyPrice))))
       }
+      htmlSections.items = itemRows.join("")
 
       const line = tr(td(hr(), "colspan=3"))
       const subtotal = tr(td("") + td("SubTotal") + tdRight(dollars(invoice.subTotal)))
-      const shipping = tr(td("") + td("Shipping") + tdRight(dollars(invoice.shippingCharge)))
+      const shipping = tr(td("") + td("Shipping") + tdRight(dollars(invoice.shipping.shippingCharge)))
       const adjustment = invoice.priceAdjustment == 0 ? "" : tr(td("") + td("Adjustment") +  tdRight("(" + dollars(invoice.priceAdjustment) + ")"))
       const total = tr(td("") + td(b("Total")) + tdRight(b(dollars(invoice.total))))
-      invoice.htmlSections.items = itemRows.join("") + line + subtotal + shipping + adjustment + line + total 
+      htmlSections.total = line + subtotal + shipping + adjustment + line + total 
       
       const paidLine = invoice.paidDate ? line : ""
       const amountPaid = invoice.paidDate ? tr(td("") + td("Amount Paid") + tdRight(dollars(invoice.amountPaid))) : ""
       const amountRemaing = invoice.paidDate ? tr(td("") + td(b("Amount Remaining")) + tdRight(b('0'))) : ""
-      invoice.htmlSections.paid = paidLine + amountPaid + amountRemaing
+      htmlSections.paid = paidLine + amountPaid + amountRemaing
       
-      let note = setting.invoiceNote
+      let note = settings.invoiceNote
       if (InvoiceMgr.isPaid(invoice)) { note = "" }
       else if (InvoiceMgr.isShipped(invoice)) {
          note = "Items shipped. "
-         if (InvoiceMgr.hasTrackingLink(invoice)) { 
-            note += a(invoice.carrier + " - " + invoice.tracking, InvoiceMgr.getTrackingLink(invoice)) 
+         if (invoice.shipping.trackingLink) { 
+            note += a(invoice.shipping.carrier + " - " + invoice.shipping.tracking, invoice.shipping.trackingLink) 
          }
-         else if (invoice.tracking) { note += invoice.carrier + ", Tracking: " + invoice.tracking}
+         else {
+            if (invoice.shipping.carrier) { note += invoice.shipping.carrier }
+            if (invoice.shipping.carrier && invoice.shipping.tracking) { note += ", " }
+            if (invoice.shipping.tracking) { note += "Tracking: " + invoice.shipping.tracking }
+         }
       }
-      invoice.htmlSections.note = p(note)
-   }
+      htmlSections.note = p(note)
 
-   static setHtml(invoice) { 
-      invoice.html = 
-         invoice.htmlSections.date + 
-         invoice.htmlSections.company +
-         br() + br() + 
-         invoice.htmlSections.user + 
+      return htmlSections.date + 
+         htmlSections.company + br() + br() + 
+         htmlSections.user + 
+         (htmlSections.paypalUser ? htmlSections.paypalUser : "") + 
          br() + 
-         table(invoice.htmlSections.items + invoice.htmlSections.paid, 
+         table(htmlSections.items + htmlSections.total + htmlSections.paid, 
             "width=100% style='border:1px solid'") +
          br() + 
-         invoice.htmlSections.note
+         htmlSections.note
    }
 
-   static setUpdated(invoice) { invoice.status = InvoiceStatus.UPDATED }
 }
 
 function right()                   { return "align=right" }
-
 function a(innerHtml, href)        { return ele(innerHtml, "a", "href=" + href) }
 function b(innerHtml)              { return ele(innerHtml, "b") }
 function br()                      { return closedEle("br") }
 function div(innerHtml, attr)      { return ele(innerHtml, "div", attr) }
 function p(innerHtml)              { return ele(innerHtml, "p") }
-function h4(innerHtml)             { return ele(innerHtml, "h4") }
 function hr()                      { return closedEle("hr") }
-// function span(innerHtml, attr)     { return ele(innerHtml, "span", attr) }
 function table(innerHtml, attr)    { return ele(innerHtml, "table", attr) }
 function tr(innerHtml)             { return ele(innerHtml, "tr") }
 function td(innerHtml, attr)       { return ele(innerHtml, "td", attr) }

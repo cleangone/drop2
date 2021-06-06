@@ -70,7 +70,7 @@
 				tableDataFilter: '',
             visibleColumns: ['userName', 'name', 'createdDate', 'total', 'status', 'sentDate'],
  				columns: [
-               { name: 'userName',    label: 'User',   align: 'left',   field: 'userFullName', sortable: true },
+               { name: 'userName',    label: 'User',   align: 'left',   field: 'tempFullName', sortable: true },
 					{ name: 'name',        label: 'Name',   align: 'left',   field: 'name',         sortable: true },
 					{ name: 'createdDate', label: 'Created ' + localTimezone(), 
                                                        align: 'center', field: 'createdDate',  sortable: true, format: val => formatDateTimeOptYear(val) },
@@ -91,8 +91,11 @@
          invoices() { 
             const displayInvoices = []
             for (var invoice of this.getInvoices ) {
-               if (this.showShipped || !InvoiceMgr.isShipped(invoice)) {
-                  displayInvoices.push(invoice) 
+               const tempInvoice = Object.assign({}, invoice)
+               tempInvoice.tempFullName =  invoice.user.fullName
+               
+               if (this.showShipped || !InvoiceMgr.isShipped(tempInvoice)) {
+                  displayInvoices.push(tempInvoice) 
                }
             }
             return displayInvoices

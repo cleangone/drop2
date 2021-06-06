@@ -21,10 +21,15 @@
                      <div class="row">
                         <q-input v-model="anonUserToUpdate.firstName" label="First Name" class="col-5" filled />
                         <q-input v-model="anonUserToUpdate.lastName"  label="Last Name"  class="col q-ml-sm"  filled />
-                     </div>               
-                     <q-input v-model="anonUserToUpdate.address" label="Address" filled/>
-                     <q-input v-model="anonUserToUpdate.city"    label="City" filled />
+                     </div>   
                      <div class="row">
+                        <q-checkbox v-model="anonUserToUpdate.usePayPalAddress" label="Use PayPal Shipping Address" dense class="col" />
+                     </div>  
+                     <div v-if="!anonUserToUpdate.usePayPalAddress" class="row">
+                        <q-input v-model="anonUserToUpdate.address" label="Address" class="col-6" filled/>
+                        <q-input v-model="anonUserToUpdate.city"    label="City" class="col q-ml-sm" filled />
+                     </div>
+                     <div v-if="!anonUserToUpdate.usePayPalAddress" class="row">
                         <q-input v-model="anonUserToUpdate.state"   label="State" class="col-3" filled />
                         <q-input v-model="anonUserToUpdate.zip"     label="Zip"   class="col-4 q-ml-sm" filled />
                         <q-input v-model="anonUserToUpdate.country" label="Country (if not USA)" class="col q-ml-sm" filled />

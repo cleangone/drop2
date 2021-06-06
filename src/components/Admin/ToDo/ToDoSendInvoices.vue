@@ -23,7 +23,7 @@
             visibleColumns: [ 'user', 'name', 'createdDate', 'total'],
  				columns: [
         			{ name: 'id',                                     field: 'id' },
-               { name: 'user',  label: 'User',  align: 'left',   field: 'userFullName', sortable: true },
+               { name: 'user',  label: 'User',  align: 'left',   field: 'tempFullName', sortable: true },
 				   { name: 'name',  label: 'Name',  align: 'left',   field: 'name',         sortable: true },
 					{ name: 'createdDate', label: 'Created ' + localTimezone(), 
                                                 align: 'center', field: 'createdDate',  sortable: true, format: val => formatDateTimeOptYear(val) },
@@ -41,8 +41,10 @@
          createdInvoices() {
             const invoices = []
             for (var invoice of this.getCreatedInvoices) {
+               const tempInvoice = Object.assign({}, invoice)
+               tempInvoice.tempFullName =  invoice.user.fullName
                // todo user.acceptsEmail may be obsolete
-               if (this.acceptsEmail(invoice.userId)) { invoices.push(invoice) }
+               if (this.acceptsEmail(tempInvoice.userId)) { invoices.push(tempInvoice) }
             }
             return invoices
          },

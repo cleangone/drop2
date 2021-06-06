@@ -7,10 +7,14 @@
 </template>
 
 <script>
+   import { mapGetters } from 'vuex'
+   import { InvoiceMgr } from 'src/managers/InvoiceMgr'
+   
 	export default {
 		props: ['invoice'],
 		computed: {	
-         html() { return this.invoice.html },
+         ...mapGetters('setting', ['getSettings']),
+         html() { return InvoiceMgr.getHtml(this.invoice, this.getSettings) },
       },
       methods: {
 			close() { this.$emit('close') }

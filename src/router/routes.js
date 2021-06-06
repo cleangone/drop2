@@ -27,6 +27,7 @@ const routes = [
          createRoute('/actions',             'User/ActionsPage'),
          createRoute('/invoices',            'User/InvoicesPage'),
          createRoute('/invoice/:id',         'User/InvoicePage'),
+         createRoute('/verify/:userId/:token', 'User/VerifyEmailPage'),
          createAdminRoute('/todo',           'ToDoAdminPage',            Route.TODO),
          createAdminRoute('/drops',          'DropsAdminPage'),
          createAdminRoute('/dropitems/:id',  'DropItemsAdminPage'),

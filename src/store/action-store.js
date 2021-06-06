@@ -51,6 +51,10 @@ const actions = {
       console.log("submitInvoicePayment", action)
       collection().doc(action.id).set(action)
    }),
+   createAction: firestoreAction((context, action) => {
+      console.log("createAction", action)
+      collection().doc(action.id).set(action)
+   }),
 }
 
 function collection() { return firestore.collection('actions') }

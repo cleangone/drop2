@@ -80,7 +80,10 @@
             return true
          },
          userFullName(userId) { return this.userIdToInfo.get(userId).fullName },
-         userEmail(userId) { return this.userIdToInfo.get(userId).email },
+         userEmail(userId) { 
+            const user = this.userIdToInfo.get(userId)
+            return user ? user.email : ""
+         },
          acceptReq(purchaseReq) { 
             this.acceptedRequestId = purchaseReq.actionId
             this.acceptPurchaseRequest( {

@@ -1,6 +1,6 @@
 <template>
   <q-page padding>  
-	  <q-card class="form-card flat">
+	  <q-card :style="'width:' + infoWidth" class="form-card flat">
 			<q-card-section>
             <div class="row" :class="blue">
                <div class="col q-gutter-sm" :class="green">
@@ -11,31 +11,43 @@
                      <span v-if="(userEmail != null) && !emailVerified" class="text-primary"> 
                         <q-btn @click="verifyEmail" label="Verify" color="primary"  size="sm" dense/> 
                      </span> -->
-                     <q-btn @click="showEditEmailModal=true" icon="edit" color="primary" size="xs" flat dense/> 
+                     <q-btn @click="showEditEmailModal=true" icon="edit" color="primary" size="xs" flat dense>
+                        <q-tooltip content-class="bg-black" :offset="[5, 5]">Edit Email</q-tooltip>                        
+                     </q-btn> 
+                     <q-icon v-if="emailVerified" name="verified_user" color="blue">
+                        <q-tooltip content-class="bg-black" :offset="[5, 5]">Email Verified</q-tooltip>                        
+                     </q-icon>
+                     <q-btn v-else @click="showVerifyEmailModal=true" icon="verified_user" color="primary" size="xs" flat dense>
+                        <q-tooltip content-class="bg-black" :offset="[5, 5]">Verify Email</q-tooltip>                        
+                     </q-btn> 
                   </div>
                   <div class="row">
                      <q-input v-model="userToUpdate.firstName" label="First Name" class="col-5" filled />
                      <q-input v-model="userToUpdate.lastName"  label="Last Name"  class="col q-ml-sm"  filled />
                   </div>
                   <div class="row">
-                     <q-input v-model="userToUpdate.nickname" label="Bidding Nickname"        class="col-5" filled />
-                     <q-input v-model="phone" label="Phone" mask="(###) ### - ####" fill-mask class="col-4 q-ml-sm" filled/>
-                     <q-checkbox v-model="userToUpdate.acceptTexts" label="Accept Texts"      class="col q-ml-sm" color="grey-7" dense />
-                  </div>                  
-                  <q-input v-model="userToUpdate.address" label="Address" filled/>
-                  <q-input v-model="userToUpdate.city"    label="City" filled />
+                     <q-input v-model="userToUpdate.nickname" label="Bidding Nickname" class="col-5" filled />
+                     <q-input v-model="updatedPhone" label="Phone" mask="(###) ### - ####" fill-mask class="col-4 q-ml-sm" filled/>
+                     <q-checkbox v-model="userToUpdate.acceptTexts" label="Accept Texts" class="col q-ml-sm" color="grey-7" dense />
+                  </div>  
                   <div class="row">
+                     <q-checkbox v-model="userToUpdate.usePayPalAddress" label="Use PayPal Shipping Address" dense class="col" />
+                  </div>                
+                  <div v-if="!userToUpdate.usePayPalAddress" class="row">
+                     <q-input v-model="userToUpdate.address" label="Address" class="col-5" filled/>
+                     <q-input v-model="userToUpdate.city"    label="City"  class="col q-ml-sm" filled />
+                  </div>                
+                  <div v-if="!userToUpdate.usePayPalAddress" class="row">
                      <q-input v-model="userToUpdate.state" label="State" class="col-3" filled />
                      <q-input v-model="userToUpdate.zip"   label="Zip"   class="col-4 q-ml-sm" filled />
                      <q-input v-model="userToUpdate.country" label="Country (if not USA)" class="col q-ml-sm" filled />
                   </div>
-                  
                </div>
-               <div class="col" :class="orange"/>
+               <!-- <div class="col" :class="orange"/> -->
             </div>
 			</q-card-section>
 		
-			<q-card-actions>
+			<q-card-actions v-if="updatesMade">
 				<q-btn @click="reset" label="Reset" color="grey" />
 				<q-btn @click="submitUpdate" label="Save" color="primary" />
 			</q-card-actions>
@@ -46,15 +58,17 @@
       <q-dialog v-model="showEditEmailModal">
 			<edit-email @emailUpdated="emailUpdated" />
 		</q-dialog> 
+      <q-dialog v-model="showVerifyEmailModal">
+			<verify-email @close="showVerifyEmailModal=false"/>
+		</q-dialog> 
   	</q-page>
 </template>
 
 <script>
-	// import { date } from 'quasar'
-   import { mapGetters, mapActions } from 'vuex'
+	import { mapGetters, mapActions } from 'vuex'
+   import { UserMgr } from 'src/managers/UserMgr'
    import { Notify } from 'quasar'
-   import { firebaseAuth } from 'boot/firebase'
-   import { Colors } from 'src/utils/Constants.js'
+   import { Colors } from 'src/utils/Constants'
    import { formatPhone, unformatPhone } from 'src/utils/Utils'
 
 	export default {
@@ -63,7 +77,11 @@
             userToUpdate: {},
             email: '',
             phone: '',
-            showEditEmailModal: false
+            updatedPhone: '',
+            showEditEmailModal: false,
+            showVerifyEmailModal: false,
+            comparisonFields: [
+               'firstName', 'lastName', 'nickname', 'acceptTexts', 'usePayPalAddress', 'address', 'city', 'state', 'zip', 'country']
 			}
 		},
 		computed: {
@@ -71,6 +89,15 @@
          ...mapGetters('user', ['getUser', 'isAdmin']),
          ...mapGetters('color', Colors),
 			user() { return this.getUser(this.userId)},
+         emailVerified() { return UserMgr.emailVerified(this.user) },
+         infoWidth() { return this.$q.screen.width > 600 ? "600px" : "100%"},
+         updatesMade() { 
+            for (var field of this.comparisonFields) {
+               if (this.user[field] != this.userToUpdate[field]) { return true}
+            }
+
+            return (this.phone != this.updatedPhone)
+         },
 		},
 		methods: {
 			...mapActions('auth', ['sendPasswordResetEmail', 'sendEmailVerification', 'reload']),
@@ -78,12 +105,18 @@
          reset() { 
             console.log("AccountPage.reset")
             this.userToUpdate = Object.assign({}, this.user) 
+            if (this.userToUpdate.usePayPalAddress == null) { this.userToUpdate.usePayPalAddress = false }
             this.email = this.currentUser.email
-            this.phone = formatPhone(this.currentUser.phone)
+            this.phone = formatPhone(this.user.phone)
+            this.updatedPhone = formatPhone(this.user.phone)
          },
          submitUpdate() {
-            this.userToUpdate.phone = unformatPhone(this.phone)
+            this.userToUpdate.phone = unformatPhone(this.updatedPhone)
             this.setUser(this.userToUpdate) 
+            this.phone = this.updatedPhone
+         },
+         verifyEmail() {
+
          },
          async updatePassword() { 
             try {
@@ -100,7 +133,8 @@
          },
       },
       components: {
-         'edit-email' : require('components/User/EditEmail.vue').default,
+         'edit-email'   : require('components/User/EditEmail.vue').default,
+         'verify-email' : require('components/User/VerifyEmail.vue').default,
       },
 		mounted() { this.reset() }
 	}

@@ -6,6 +6,7 @@
       anonUserEmail (used for anon logins)
       firstName, lastName
       nickname
+      usePayPalAddress
       address, city, state, zip, country
       phone
       acceptTexts
@@ -27,7 +28,10 @@ export class UserMgr {
    }
 
    static getEmail(user) { return user.authEmailCopy ? user.authEmailCopy : user.anonUserEmail }
-
+   static emailVerified(user) { 
+      return (user.verifiedEmail && (user.verifiedEmail == UserMgr.getEmail(user)))
+   }
+      
    static getUserIdToInfo(users) { 
       let userIdToInfo = new Map()
       for (var user of users) {
@@ -40,12 +44,15 @@ export class UserMgr {
    static getInfo(user) { 
       let fullName = UserMgr.fullName(user)
       let email = user.authEmailCopy
-
+      const qualifiers = []
       if (UserMgr.exists(user.anonUserEmail)) { 
-         fullName += " (Anon User)"
+         qualifiers.push("anonymous")
          email = user.anonUserEmail
       }
-      
+
+      if (email == user.verifiedEmail) { qualifiers.push("verified")}
+      if (qualifiers.length) { email += " (" + qualifiers.join(", ") + ")" }
+
       return { fullName: fullName, email: email }      
    }
 

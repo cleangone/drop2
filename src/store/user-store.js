@@ -16,6 +16,7 @@ const actions = {
       collection().doc(user.id).set(user)
    }),
    updateUser: firestoreAction((context, user) => {
+      console.log("updateUser", user)
       collection().doc(user.id).update(user)
    }),
    setLikes: firestoreAction((context, user) => {
@@ -31,7 +32,16 @@ const getters = {
       for (var user of state.users) {
           if (user.id == userId) { return user }
       }
-      return { id: userId }
+      return { id: userId, usePayPalAddress: false }
+   }, 
+   getUserEmailSkeleton: state => userId => {
+      for (var user of state.users) {
+         if (user.id == userId) { 
+            return { id: user.id, authEmailCopy: user.authEmailCopy, anonUserEmail: user.anonUserEmail, 
+               verifiedEmail: user.verifiedEmail, emailVerificationTokens: user.emailVerificationTokens }
+         } 
+      }
+      return null
    }, 
    isAdmin: state => userId => { 
       for (var user of state.adminUsers) {
