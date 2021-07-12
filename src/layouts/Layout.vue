@@ -66,6 +66,7 @@
                <layout-item path="/admin/categories" label="Artists"    iconName="brush"/>
                <layout-item path="/admin/users"      label="Users"      iconName="group"/>
                <layout-item path="/admin/invoices"   label="Invoices"   iconName="shopping_cart"/>
+               <layout-item path="/admin/shipments"  label="Shipments"  iconName="local_shipping"/>
                <layout-item path="/admin/tags"       label="Tags"       iconName="topic"/>
                <layout-item path="/admin/settings"   label="Settings"   iconName="settings"/>
                <q-toggle label="Admin Footer" v-model="showAdminFooter" color="blue" />
@@ -255,6 +256,7 @@
          ...mapActions('item',    ['bindItems', 'bindCategoryItems', 'bindDropItems', 'bindRecentItems' ]),
          ...mapActions('search',  ['setSearchStart', 'setSearchResults']),         
          ...mapActions('setting', ['bindSettings']),
+         ...mapActions('shipment',['bindShipments']),
          ...mapActions('tag',     ['bindTags']),
          ...mapActions('user',    ['bindUsers']),
          ...mapActions('install', ['setDeferredPrompt', 'setInstallStatus']),
@@ -312,7 +314,8 @@
          this.bindSettings()
          this.bindTags()
          this.bindUsers()
-
+         this.bindShipments()
+         
          const searchClient = algoliasearch(AlgoliaConfig.appId, AlgoliaConfig.searchKey)
          this.searchIndex = searchClient.initIndex(AlgoliaConfig.index);
             

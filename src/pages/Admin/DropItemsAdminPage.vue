@@ -4,7 +4,9 @@
          <div>Drop Items Admin</div>
          <router-link :to="'/drop/' + dropId">{{ drop.name }}</router-link> 
          <span class="text-subtitle1"> ({{ heading }}) </span>
-         <q-btn icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary" />
+         <q-btn icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary">
+            <q-tooltip content-class="bg-black" :offset="[5, 5]">Edit Drop</q-tooltip>
+         </q-btn>
       </div>
 		<items-admin :dropId="dropId" :items="items" class="full-width full-height" :class="orange"/>
       <q-dialog v-model="showEditDropModal">

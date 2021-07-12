@@ -131,18 +131,18 @@
                       (this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment)) {
                      this.invoiceToSubmit.status = InvoiceStatus.REVISED
                      this.invoiceToSubmit.revisedDate = processedDate
-                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.REVISED)
+                     this.addHistory(processedDate, InvoiceStatus.REVISED)
                   }
 
                   if (InvoiceMgr.isPaid(this.invoiceToSubmit) && !InvoiceMgr.isPaid(this.invoice)) {
                      this.invoiceToSubmit.paidDate = processedDate
                      this.invoiceToSubmit.amountPaid = this.invoiceToSubmit.total
-                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.PAID)
+                     this.addHistory(processedDate, InvoiceStatus.PAID)
                   }
                    
                   if (InvoiceMgr.isShipped(this.invoiceToSubmit) && !InvoiceMgr.isShipped(this.invoice)) {
                      this.invoiceToSubmit.shippedDate = processedDate
-                     this.addHistory(this.invoiceToSubmit, processedDate, InvoiceStatus.SHIPPED)
+                     this.addHistory(processedDate, InvoiceStatus.SHIPPED)
                   }
 
                   InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
@@ -157,23 +157,17 @@
                }
             }
 			},
-         addHistory(invoice, date, status) { invoice.history.push({ date: date, status: status }) },
+         addHistory(date, status) { this.invoiceToSubmit.history.push({ date: date, status: status }) },
       },
 		created() {
          // slight delay because param update propagating as modal being popped up
          setTimeout(() => { 
-            // console.log("created: isEdit", this.isEdit)
-
             if (this.isEdit) {
-               
-               console.log("invoice", this.invoice)
                this.invoiceToSubmit = Object.assign({}, this.invoice) 
-               console.log("invoiceToSubmit", this.invoiceToSubmit)
-               
-
+               // console.log("Editing invoiceToSubmit", this.invoiceToSubmit)
             }
             else {
-               this.addHistory(this.invoiceToSubmit, this.invoiceToSubmit.createdDate, InvoiceStatus.CREATED)
+               this.addHistory(this.invoiceToSubmit.createdDate, InvoiceStatus.CREATED)
 
                for (var item of this.items) {
                   if (!item.buyerId) { 
@@ -198,9 +192,9 @@
             }
 
             this.user = this.getUser(this.invoiceToSubmit.userId)
-            // console.log("created", this.user)
             if (!this.isEdit) { 
-               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
+               InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings) 
+               // console.log("Creating invoiceToSubmit", this.invoiceToSubmit)
             }
         }, 100)  
 		}

@@ -43,13 +43,12 @@ export const InvoiceSendStatus = {
    ERROR:   'Send Error'
 }
 
-const InvoiceCarrier = {
+export const InvoiceCarrier = {
    USPS_PRIORITY: 'USPS Priority',
    FEDEX:         'FedEx',
 }
 
 export class InvoiceMgr {
-   
    static isCreated(invoice)  { return invoice.status == InvoiceStatus.CREATED }
    static isRevised(invoice)  { return invoice.status == InvoiceStatus.REVISED }
    static isPaid(invoice)     { return invoice.status == InvoiceStatus.PAID }

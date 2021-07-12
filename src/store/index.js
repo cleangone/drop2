@@ -15,6 +15,7 @@ import invoice  from './invoice-store'
 import item     from './item-store'
 import search   from './search-store'
 import setting  from './setting-store'
+import shipment from './shipment-store'
 import sms      from './sms-store'
 import tag      from './tag-store'
 import user     from './user-store'
@@ -37,6 +38,7 @@ export default function () {
          item,
          search,
          setting,
+         shipment,
          sms,
          tag,
          user

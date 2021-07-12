@@ -39,6 +39,7 @@ const routes = [
          createAdminRoute('/users',          'UsersAdminPage'),
          createAdminRoute('/invoices',       'InvoicesAdminPage'),
          createAdminRoute('/tags',           'TagsAdminPage'),
+         createAdminRoute('/shipments',      'ShipmentsAdminPage'),
          createAdminRoute('/settings',       'SettingsPage'),
     ]
   }

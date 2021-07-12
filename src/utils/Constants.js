@@ -36,6 +36,9 @@ export const UI = {
 }
 
 export const Versions = [
+   "v2.4.2  - 7/11/21",  // Initial add of Shipment object, which replaces qr/barcode
+   "v2.4.1  - 6/29/21",  // Integrate scanned barcodes for USPS (receipt QR only for survey)
+   "v2.4.0  - 6/14/21",  // Integrate QR reader for USPS receipts
    "v2.3.1  - 6/6/21",   // Store, display paypal shipping info on invoice; verify email
    "v2.3.0  - 6/3/21",   // Initial paypal Integration for invoice payment - paypal sandbox only
    "v2.2.3  - 6/1/21",   // Add ToDo for sending created invoices.  Add sent/resent to invoice status  

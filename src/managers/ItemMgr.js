@@ -99,7 +99,9 @@ export class ItemMgr {
       })
       return availableItems
    }
-   
+
+   static sortBySortName(items) { return items.sort((a, b) => (a.sortName < b.sortName) ? -1 : 1) }
+            
    static isRequestedByUser(item, userId) { 
       if (ItemMgr.isRequested(item)) { 
          for (var purchaseReq of item.purchaseReqs) {

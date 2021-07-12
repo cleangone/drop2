@@ -110,13 +110,13 @@
 				displayColumns: [ 'name', 'price', 'status', 'actions'],
  				columns: [
         			{ name: 'id', field: 'id' },
-				 	{ name: 'name',     label: 'Name (Sort Name)', align: 'left',                       sortable: true },
+				 	{ name: 'name',     label: 'Name (Sort Name)', align: 'left',   field: 'sortName',  sortable: true },
 				 	{ name: 'category', label: 'Artist',           align: 'center', field: 'category',  sortable: true, format: val => val ? val.name : "" },
 				 	{ name: 'drop',     label: 'Drop',             align: 'center', field: 'tempDrop',  sortable: true },
 				 	{ name: 'tags',     label: 'Tags',             align: 'center', field: 'tempTags',  sortable: true },
 				 	{ name: 'saleType', label: 'Sale Type',        align: 'center', field: 'saleType',  sortable: true },
 					{ name: 'buyerId',  label: 'Buyer',            align: 'left',   field: 'buyerId',   sortable: true, format: val => this.userFullName(val) },
-					{ name: 'price',    label:'Start/Final Price', align: 'right',                      sortable: true },
+					{ name: 'price',    label:'Start/Final Price', align: 'right',  field: 'startPrice', sortable: true },
 					{ name: 'bidreq',   label: 'Bid/Req',          align: 'center',                     sortable: true },
 					{ name: 'status',   label: 'Status',           align: 'center', field: 'status',    sortable: true },
 					{ name: 'actions' }
@@ -157,7 +157,8 @@
 
                copies.push(copy) 
             })
-            return copies
+
+            return ItemMgr.sortBySortName(copies)
          },
          displayItems() { 
             if (this.showItems.available && this.showItems.hold && this.showItems.sold) { return this.tableItems }

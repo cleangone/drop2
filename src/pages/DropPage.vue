@@ -3,9 +3,15 @@
 		<div v-if="drop">
 			<div class="row q-mt-sm text-h5">
             {{ drop.name }}
-            <q-btn v-if="isAdmin" icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary" />
+            <!-- <q-btn v-if="isAdmin" icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary" />
+            <q-btn v-if="isAdmin" icon="work" @click="showEditDropModal=true" size="sm" flat dense color="primary" /> -->
             <div v-if="isAdmin">
-               <q-btn label="Items" :to="'/admin/dropitems/' + dropId" color="primary" size="xs" dense no-caps/>
+               <q-btn icon="edit" @click="showEditDropModal=true" size="sm" flat dense color="primary">
+                  <q-tooltip content-class="bg-black" :offset="[5, 5]">Edit Drop</q-tooltip>
+               </q-btn>  
+               <q-btn icon="work" :to="'/admin/dropitems/' + dropId" size="sm" flat dense color="primary">
+                  <q-tooltip content-class="bg-black" :offset="[5, 5]">Edit Items</q-tooltip>
+               </q-btn>  
             </div>
          </div>
          <div v-if="adminViewingPreDrop" class="row q-mt-none">
@@ -84,9 +90,7 @@
             else if (ToggleContainerMgr.isSortItemsByPriceLowest(this.sortItemsToggleContainer)) { 
                sortedItems.sort((a, b) => (a.startPrice < b.startPrice) ? -1 : 1)
             }
-            else {
-               sortedItems.sort((a, b) => (a.sortName > b.sortName) ? 1 : -1)  
-            }
+            else { ItemMgr.sortBySortName(sortedItems) }
             
             SessionMgr.setDropItemsDesc("Drop", this.dropId) 
             return SessionMgr.setDisplayItems(sortedItems)

@@ -6,7 +6,10 @@ const ToggleOptions = {
    SORT_NAME:       { label: 'Sort by Name', value: 'name' },
    SORT_DATE:       { label: 'Date', value: 'date' },
    SORT_PRICE_HIGH: { label: 'Price (Highest)', value: "price" }, 
-   SORT_PRICE_LOW:  { label: 'Price (Lowest)', value: "low" } ,
+   SORT_PRICE_LOW:  { label: 'Price (Lowest)', value: "low" },
+   CARRIER_USPS:    { label: 'USPS', value: 'usps' }, 
+   CARRIER_FEDEX:   { label: 'FedEx', value: 'fedex' }, 
+   CARRIER_OTHER:   { label: 'Other', value: 'other' }, 
 }
 
 export class ToggleContainerMgr {
@@ -24,11 +27,19 @@ export class ToggleContainerMgr {
          "SortItemsFullModel")
    }
 
+   static getCarriersContainer() {
+      return createToggleContainer(
+         [ ToggleOptions.CARRIER_USPS, ToggleOptions.CARRIER_FEDEX, ToggleOptions.CARRIER_OTHER ], 
+         "CarriersModel")
+   }
+
    static isShowItemsAll(toggleContainer)    { return isModel(toggleContainer, ToggleOptions.SHOW_ALL) }
    static isSortItemsByName(toggleContainer) { return isModel(toggleContainer, ToggleOptions.SORT_NAME) }
    static isSortItemsByDate(toggleContainer) { return isModel(toggleContainer, ToggleOptions.SORT_DATE) }
    static isSortItemsByPriceHighest(toggleContainer) { return isModel(toggleContainer, ToggleOptions.SORT_PRICE_HIGH) }
    static isSortItemsByPriceLowest(toggleContainer)  { return isModel(toggleContainer, ToggleOptions.SORT_PRICE_LOW) }
+   static isUSPS(toggleContainer)  { return isModel(toggleContainer, ToggleOptions.CARRIER_USPS) }
+   static isFedEx(toggleContainer) { return isModel(toggleContainer, ToggleOptions.CARRIER_FEDEX) }
 }
 
 function createToggleContainer(options, sessionKey) {  
