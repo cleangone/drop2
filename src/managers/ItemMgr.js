@@ -6,6 +6,7 @@
       categoryId - todo may also need category name for searching, may have multiple categories
       name
       sortName
+      saleType
       startPrice
       buyPrice
       buyDate
@@ -132,4 +133,6 @@ export class ItemMgr {
    static isHold(item)      { return item.status == ItemStatus.HOLD }
    static isInvoiced(item)  { return item.status == ItemStatus.INVOICED }
    static isSold(item)      { return item.status == ItemStatus.SOLD }
+
+   static isBidOrDrop(item) { return item.saleType == ItemSaleType.BID || item.saleType == ItemSaleType.DROP }
 }

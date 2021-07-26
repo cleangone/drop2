@@ -2,12 +2,17 @@
   <div>     
       <div class="row q-pl-sm q-pr-sm" :class="purple">
          <span class="col text-grey-10" color="grey-10" :class="red">
-			   <q-checkbox v-if="dropId"     v-model="showCols.category" label="Artist"  @input="showColsChecked()" size="xs" dense />
-            <q-checkbox v-if="categoryId" v-model="showCols.drop"     label="Drop"    @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.tags"       label="Tags"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.saleType"   label="Sale Type" @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.buyer"      label="Buyer"     @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.bidreq"     label="Bid/Req"   @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+			   <q-checkbox v-model="showCols.show.sortName"  label="Sort Name"  @input="showColsChecked()" size="xs" dense />
+            <q-checkbox v-if="dropId"     
+                        v-model="showCols.show.category"  label="Artist"     @input="showColsChecked('category')" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-if="categoryId" 
+                        v-model="showCols.show.drop"      label="Drop"       @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.show.tags"      label="Tags"       @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.show.saleType"  label="Sale Type"  @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.show.buyer"     label="Buyer"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.show.bidReq"   :label=bidReqHeader @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.show.lastBidReqDate" 
+                                                 :label=lastBidReqDateHeader @input="showColsChecked('lastBidReqDate')" size="xs" dense class="q-ml-sm" />
          </span>
          <span class="col text-grey-10 text-right" color="grey-10" :class="red">
 			   <q-checkbox v-model="showItems.available" label="Available" @input="showItemsChecked()" size="xs" dense />
@@ -25,14 +30,19 @@
 					<q-input borderless dense debounce="300" v-model="tableDataFilter" placeholder="Search">
 						<template v-slot:append><q-icon name="search"/></template>
 					</q-input>
-				</template> 
+				</template>
+            <template v-slot:header-cell-name><q-th>{{ nameHeader }}</q-th></template>
+            <template v-slot:header-cell-price><q-th>{{ priceHeader }}</q-th></template>
+            <template v-slot:header-cell-userDate><q-th>{{ userDateHeader }}</q-th></template>
+            <template v-slot:header-cell-bidReq><q-th>{{ bidReqHeader }}</q-th></template>
+            <template v-slot:header-cell-lastBidReqDate><q-th>{{ lastBidReqDateHeader }}</q-th></template>
             <q-td slot="body-cell-name" slot-scope="props" :props="props"> 
                {{ props.row.name + sortNameText(props.row.sortName) }}
             </q-td>
             <q-td slot="body-cell-price" slot-scope="props" :props="props"> 
                {{ priceText(props.row) }}
             </q-td>
-            <q-td slot="body-cell-bidreq" slot-scope="props" :props="props"> 
+            <q-td slot="body-cell-bidReq" slot-scope="props" :props="props"> 
                <a v-if="props.row.numberOfBids == 1"     :href="'#/bids/' + props.row.id">{{ props.row.numberOfBids }} Bid</a>
 	            <a v-else-if="props.row.numberOfBids > 0" :href="'#/bids/' + props.row.id">{{ props.row.numberOfBids }} Bids</a>
 	            <a v-else-if="props.row.numberOfPurchaseReqs == 1" :href="'#/admin/reqs/' + props.row.id">{{ props.row.numberOfPurchaseReqs }} Req</a>
@@ -87,6 +97,7 @@
    import { ItemMgr } from 'src/managers/ItemMgr'
    import { UI, Colors } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
+   import { formatDateTimeScalingPrecision, localTimezone, isToday } from 'src/utils/DateUtils'
    
    const SHOW_COLS  = 'ItemsAdminShowColumns'
    const SHOW_ITEMS = 'ItemsAdminShowItemStatus'
@@ -110,15 +121,16 @@
 				displayColumns: [ 'name', 'price', 'status', 'actions'],
  				columns: [
         			{ name: 'id', field: 'id' },
-				 	{ name: 'name',     label: 'Name (Sort Name)', align: 'left',   field: 'sortName',  sortable: true },
-				 	{ name: 'category', label: 'Artist',           align: 'center', field: 'category',  sortable: true, format: val => val ? val.name : "" },
-				 	{ name: 'drop',     label: 'Drop',             align: 'center', field: 'tempDrop',  sortable: true },
-				 	{ name: 'tags',     label: 'Tags',             align: 'center', field: 'tempTags',  sortable: true },
-				 	{ name: 'saleType', label: 'Sale Type',        align: 'center', field: 'saleType',  sortable: true },
-					{ name: 'buyerId',  label: 'Buyer',            align: 'left',   field: 'buyerId',   sortable: true, format: val => this.userFullName(val) },
-					{ name: 'price',    label:'Start/Final Price', align: 'right',  field: 'startPrice', sortable: true },
-					{ name: 'bidreq',   label: 'Bid/Req',          align: 'center',                     sortable: true },
-					{ name: 'status',   label: 'Status',           align: 'center', field: 'status',    sortable: true },
+				 	{ name: 'name',                         align: 'left',                        sortable: true },
+				 	{ name: 'category', label: 'Artist',    align: 'center', field: 'category',   sortable: true, format: val => val ? val.name : "" },
+				 	{ name: 'drop',     label: 'Drop',      align: 'center', field: 'tempDrop',   sortable: true },
+				 	{ name: 'tags',     label: 'Tags',      align: 'center', field: 'tempTags',   sortable: true },
+				 	{ name: 'saleType', label: 'Sale Type', align: 'center', field: 'saleType',   sortable: true },
+					{ name: 'buyerId',  label: 'Buyer',     align: 'left',   field: 'buyerId',    sortable: true, format: val => this.userFullName(val) },
+               { name: 'price',                        align: 'right',  field: 'startPrice', sortable: true },
+					{ name: 'bidReq',                       align: 'center',                      sortable: true },
+					{ name: 'lastBidReqDate',               align: 'center', field: 'userUpdatedDate', sortable: true, format: val => formatDateTimeScalingPrecision(val) },
+					{ name: 'status',   label: 'Status',    align: 'center', field: 'status',     sortable: true },
 					{ name: 'actions' }
             ],
             pagination: { rowsPerPage: 50 },
@@ -132,16 +144,33 @@
          ...mapGetters('color', Colors),
 			visibleColumns() { 
             const columns = [...this.displayColumns]
-            if (this.categoryId && this.showCols.drop)     { columns.push('drop') } 
-            if (this.dropId     && this.showCols.category) { columns.push('category') } 
-            if (this.showCols.tags)     { columns.push('tags') }
-            if (this.showCols.saleType) { columns.push('saleType') }
-            if (this.showCols.buyer)    { columns.push('buyerId') }
-            if (this.showCols.bidreq)   { columns.push('bidreq') }
-            return columns 
+            if (this.categoryId && this.showCols.show.drop)     { columns.push('drop') } 
+            if (this.dropId     && this.showCols.show.category) { columns.push('category') } 
+            if (this.showCols.show.tags)     { columns.push('tags') }
+            if (this.showCols.show.saleType) { columns.push('saleType') }
+            if (this.showCols.show.buyer)    { columns.push('buyerId') }
+            if (this.showCols.show.bidReq)   { columns.push('bidReq') }
+            if (this.showCols.show.lastBidReqDate)  { columns.push('lastBidReqDate') }
+            return columns
          },
+         hasBidOrDropItems() { 
+            for (var item of this.tableItems) {
+               if (ItemMgr.isBidOrDrop(item)) { return true }       
+            }
+            return false 
+         },
+         nameHeader()     { return this.showCols.show.sortName ? 'Name (Sort Name)' : 'Name' },
+         priceHeader()    { return this.hasBidOrDropItems ? 'Start/Final Price' : 'Price' },
+         userDateHeader() { return (this.hasBidOrDropItems ? 'Last Bid/Req ' : 'Last Req ') + localTimezone() },
+         bidReqHeader()   { return this.hasBidOrDropItems ? 'Bid/Req' : 'Requests'},
+         lastBidReqDateHeader() { return this.hasBidOrDropItems ? 'Last Bid/Req' : 'Last Request'},
          tableItems() { 
             let copies = []
+            let showCategory = false // show artist initially if diff values
+            let commonCategoryId = null
+            let showSaleType = false // show saleType initially if diff values
+            let commonSaleType = null
+            let showLastBidReqDate = false // show lastBidReqDate initially if any item has a date that is today
             this.items.forEach(item => { 
                const copy = Object.assign({}, item)
                copy.tempName = copy.sortName + " " + copy.name // sort by sortName and be able to filter by name
@@ -155,8 +184,25 @@
                }
                copy.tempTags = tagNames.join(', ')
 
+               if (this.showCols.clicked.category == null) {
+                  console.log("commonCategory", commonCategoryId)
+                 if (commonCategoryId == null) { commonCategoryId = copy.category.id }
+                 else if (commonCategoryId != copy.category.id) { showCategory = true }
+               }
+               if (this.showCols.clicked.saleType == null) {
+                 if (commonSaleType == null) { commonSaleType = copy.saleType }
+                 else if (commonSaleType != copy.saleType) { showSaleType = true }
+               }
+               if (this.showCols.clicked.lastBidReqDate == null) {
+                 if (!isToday(copy.userUpdatedDate)) { showLastBidReqDate = true }
+               }
+
                copies.push(copy) 
             })
+            
+            if (this.showCols.clicked.category == null) { this.showCols.show.category = showCategory }
+            if (this.showCols.clicked.saleType == null) { this.showCols.show.saleType = showSaleType }
+            if (this.showCols.clicked.lastBidReqDate == null) { this.showCols.show.lastBidReqDate = showLastBidReqDate }
 
             return ItemMgr.sortBySortName(copies)
          },
@@ -210,12 +256,15 @@
 				this.itemIdToEdit = itemId
 				this.showEditModal = true
          },
-         sortNameText(sortName) { return sortName && sortName.length ?" (" + sortName + ")" : "" },
+         sortNameText(sortName) { 
+            return this.showCols.show.sortName && sortName && sortName.length ? " (" + sortName + ")" : ""
+         },
          priceText(row) { 
             let text = dollars(row.startPrice) 
             if (row.buyPrice && (row.buyPrice != row.startPrice)) { text += ("/" + dollars(row.buyPrice))}
             return text 
          },
+         isRequested(row) { return ItemMgr.isRequested(row) },
          userFullName(userId) { return UserMgr.lookupFullName(this.userLookup, userId) },
 			promptToDeleteItem(itemId, name) {
 				this.$q.dialog({title: 'Confirm', message: 'Delete ' + name + '?', persistent: true,			
@@ -231,17 +280,22 @@
             this.showQuickEditModal = false
          },
          editImages(itemId) { this.$router.push("/admin/images/" + itemId) },
-         showColsChecked() { SessionStorage.set(SHOW_COLS, this.showCols) },
+         showColsChecked(colName) { 
+            if (colName) { this.showCols.clicked[colName] = true }
+            SessionStorage.set(SHOW_COLS, this.showCols) 
+         },
          showItemsChecked() { SessionStorage.set(SHOW_ITEMS, this.showItems) },
       },
       created() {
          this.showCols = SessionStorage.getItem(SHOW_COLS)    
          if (!this.showCols) { 
             this.showCols = { 
-               category: true, drop: true, tags: true, saleType: true, buyer: true, bidreq: true 
+               show: {
+                  category: true, drop: true, tags: true, saleType: true, 
+                  buyer: true, bidReq: true, lastBidReqDate: true},
+               clicked: {}
             } 
          }
-      
          this.showItems = SessionStorage.getItem(SHOW_ITEMS)    
          if (!this.showItems) { this.showItems = { 
             available: true, hold: true, sold: true } }      

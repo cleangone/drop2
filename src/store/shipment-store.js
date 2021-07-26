@@ -25,6 +25,7 @@ const actions = {
       showPositiveNotify("Shipments added")   
    }),
    setShipment: firestoreAction((context, shipment) => { collection().doc(shipment.id).set(shipment) }),
+   updateShipment: firestoreAction((context, shipment) => { collection().doc(shipment.id).update(shipment) }),
    deleteShipment: firestoreAction((context, id) => { collection().doc(id).delete() }),
 }
 

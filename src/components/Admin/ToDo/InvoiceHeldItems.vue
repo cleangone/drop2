@@ -65,10 +65,17 @@
            
             return buyers
          },
-         displayItems() {
-            if (!this.selectedBuyer || !this.selectedBuyer.value) { return this.getHoldItems }
-            const displayItems = []
+         holdItemsToInvoice() {
+            const items = []
             for (var item of this.getHoldItems) {
+               if (item.buyerId) { items.push(item) }
+            }
+            return items
+         },
+         displayItems() {
+            if (!this.selectedBuyer || !this.selectedBuyer.value) { return this.holdItemsToInvoice }
+            const displayItems = []
+            for (var item of this.holdItemsToInvoice) {
                if (this.selectedBuyer.value == item.buyerId) { displayItems.push(item) }
             }
             return displayItems

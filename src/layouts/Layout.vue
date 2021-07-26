@@ -101,6 +101,8 @@
       <q-dialog v-model="userHasAlert">
          <user-alert :alert="userAlert" :user="user" :cancelledAlertIds="cancelledAlertIds" />
       </q-dialog>
+
+      <bindings/>
   </q-layout>
 </template>
 
@@ -109,8 +111,9 @@
    import algoliasearch from 'algoliasearch/lite'
    import { AlgoliaConfig } from 'boot/algoliaConfig'
    import { LocalStorageMgr, InstallStatus } from 'src/managers/storage/LocalStorageMgr'
-   import { Route, Versions } from 'src/utils/Constants'
+   import { Route } from 'src/utils/Constants'
    import { getIds } from 'src/utils/Utils'
+   import { Versions } from 'src/utils/Version'
    
    export default {
       name: 'MyLayout',
@@ -120,8 +123,6 @@
             showDrawer: true,
             drawerLockedOpen: false,
             drawerMouseover: false,
-            boundUserId: null,
-            unboundCartItems: [],
             cancelledAlertIds: [],
             showAdminFooter: true,
             showSearch: false,
@@ -132,7 +133,7 @@
       computed: {
          ...mapGetters('auth', ['userId', 'loggedIn', 'anonLoggedIn']),
          ...mapGetters('action', ['actionsExist', 'getUserActions']),
-         ...mapGetters('cart', ['cartSize', 'getCartItems']),
+         ...mapGetters('cart', ['cartSize']),
          ...mapGetters('category', ['getPublicCategories']),
          ...mapGetters('current', ['currentActivityExists']),
          ...mapGetters('drop', ['getHomePageDrops']),
@@ -144,56 +145,9 @@
          drawerMini() { return this.$q.platform.is.mobile ? false : (!this.drawerLockedOpen && !this.drawerMouseover) },
          drawerOverlay() { return this.$q.platform.is.mobile ? true : false },
          user() { return this.getUser(this.userId)},
-         userIsLoggedIn() { 
-            if (this.loggedIn) {
-               console.log("userIsLoggedIn: user " + this.userId)
-               if (this.userId != this.boundUserId) { 
-                  this.bindUserActions(this.userId) 
-                  this.bindUserInvoices(this.userId) 
-                  this.bindCart() 
-                  this.boundUserId = this.userId
-               }
-            }
-            else if (this.anonLoggedIn) {
-               console.log("userIsLoggedIn: anon user " + this.userId)
-               if (this.userId != this.boundUserId) { 
-                  this.bindCart() 
-                  this.boundUserId = this.userId
-               }
-            }
-            else {
-               // console.log("userIsLoggedIn: none")
-               if (this.boundUserId != null) { 
-                  // console.log("unbinding userId " + this.boundUserId)
-                  this.unbindUserActions() 
-                  this.unbindUserInvoices() 
-                  
-                  this.unboundCartItems = this.getCartItems
-                  this.unbindUserCart()
-                  this.boundUserId = null
-               }
-
-               // wait 2 secs to let auth settle, and then anon login if not logged in
-               setTimeout(() => { 
-                  if (!this.loggedIn && !this.anonLoggedIn) {
-                     // console.log("userIsLoggedIn: logging in anon user")
-                     this.loginAnonUser()
-                  }
-               }, 2000) 
-            }
-            return this.loggedIn
-         },
+         userIsLoggedIn() { return this.loggedIn },
          loginPage() { return "/auth/login/" + Route.HOME },
-         userIsAdmin() { 
-            const isAdmin = this.user && this.user.isAdmin
-            // console.log("Layout.userIsAdmin", isAdmin)
-            if (isAdmin) {
-               if (!this.actionsExist) { this.bindActions() }
-               if (!this.invoicesExist) { this.bindInvoices() }
-               this.bindEmailErrors()
-            }
-            return isAdmin 
-         },
+         userIsAdmin() { return this.user && this.user.isAdmin },
          largeScreen() { return this.$q.screen.width > 450 },
          userDisplayName() { return this.largeScreen ? 
             (this.user.firstName ? this.user.firstName : this.user.authEmailCopy) : ""  },
@@ -245,20 +199,10 @@
          version() { return Versions[0] },
       },
       methods: {
-         ...mapActions('action',  ['bindActions', 'bindUserActions', 'unbindUserActions']),
          ...mapActions('auth',    ['loginAnonUser', 'logoutUser']),
-         ...mapActions('cart',    ['bindUserCart', 'unbindUserCart', 'addItemsToCart']),
          ...mapActions('current', ['setCurrentActivity']),
-         ...mapActions('drop',    ['bindDrops']),
-         ...mapActions('error',   ['bindEmailErrors']),
-         ...mapActions('category',['bindCategories']),         
-         ...mapActions('invoice', ['bindInvoices', 'bindUserInvoices', 'unbindUserInvoices']),
-         ...mapActions('item',    ['bindItems', 'bindCategoryItems', 'bindDropItems', 'bindRecentItems' ]),
+         ...mapActions('item',    ['bindCategoryItems', 'bindDropItems']),
          ...mapActions('search',  ['setSearchStart', 'setSearchResults']),         
-         ...mapActions('setting', ['bindSettings']),
-         ...mapActions('shipment',['bindShipments']),
-         ...mapActions('tag',     ['bindTags']),
-         ...mapActions('user',    ['bindUsers']),
          ...mapActions('install', ['setDeferredPrompt', 'setInstallStatus']),
          toggleDrawerLock() { 
             if (this.$q.platform.is.mobile) {
@@ -269,14 +213,6 @@
                this.drawerLockedOpen = !this.drawerLockedOpen
                // console.log("desktop - drawerLockedOpen", this.drawerLockedOpen)
             }
-         },
-         bindCart() { 
-            // preserve any items in current cart or in cart when logged out  
-            const currItems = this.getCartItems
-            this.bindUserCart(this.userId)  
-            this.addItemsToCart(currItems)  
-            this.addItemsToCart(this.unboundCartItems)  
-            this.unboundCartItemIds = []
          },
          logout() {        
             this.logoutUser()
@@ -307,14 +243,6 @@
       },
       created() {
          if (this.$q.platform.is.mobile) { this.showDrawer = false }
-         this.bindDrops()
-         this.bindCategories()
-         this.bindItems()
-         this.bindRecentItems()
-         this.bindSettings()
-         this.bindTags()
-         this.bindUsers()
-         this.bindShipments()
          
          const searchClient = algoliasearch(AlgoliaConfig.appId, AlgoliaConfig.searchKey)
          this.searchIndex = searchClient.initIndex(AlgoliaConfig.index);
@@ -331,6 +259,7 @@
          })
       },
       components: {
+         'bindings'    : require('layouts/Bindings.vue').default,
          'layout-item' : require('layouts/LayoutItem.vue').default,
          'list-item'   : require('layouts/ListItem.vue').default,
          'footer-tab'  : require('layouts/FooterTab.vue').default,

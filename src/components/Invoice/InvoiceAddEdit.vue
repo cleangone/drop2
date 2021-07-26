@@ -42,12 +42,15 @@
 			<q-input v-model.number="invoiceToSubmit.priceAdjustment" label="(Price Adjustment)" type=number prefix="$" filled class="col" />
 		</div>
       <div v-if="isEdit" class="row q-mb-none q-gutter-sm">
-         <q-select  v-model="invoiceToSubmit.status" label="Status" :options="statusOptions" class="col" filled/>
+         <q-select v-model="invoiceToSubmit.status" label="Status" :options="statusOptions" class="col" filled/>
          <div class="col"/>
 		</div>
+      <div v-if="isEdit" class="row q-mt-sm q-mb-none q-gutter-sm">
+         <q-select v-model="selectedShipment" @input="onShipmentSet()" label="Shipment" :options="shipmentOptions" class="col" filled />
+      </div>
       <div v-if="isShipped" class="row q-mt-sm q-gutter-sm">
-         <q-select v-model="invoiceToSubmit.shipping.carrier" label="Carrier" :options="carrierOptions" class="col" filled/>
-         <q-input v-model="invoiceToSubmit.shipping.tracking" label="Tracking" filled class="col" />
+         <q-select v-model="invoiceToSubmit.shipping.service" label="Service" :options="serviceOptions" :disable="shipmentExists" filled class="col"/>
+         <q-input v-model="invoiceToSubmit.shipping.tracking" label="Tracking" :disable="shipmentExists" filled class="col" />
 		</div>
    </q-card-section>
 
@@ -62,6 +65,7 @@
 	import { mapGetters, mapActions } from 'vuex'
    import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
    import { InvoiceMgr, InvoiceStatus } from 'src/managers/InvoiceMgr'
+   import { ShipmentMgr, ShipmentStatus } from 'src/managers/ShipmentMgr'
    import { UI } from 'src/utils/Constants'
    import { dollars } from 'src/utils/Utils'
    
@@ -84,7 +88,8 @@
             },
             statusOptions: [ InvoiceStatus.REVISED, InvoiceStatus.PAID, InvoiceStatus.SHIPPED ],
             adjustableStatus: [ InvoiceStatus.CREATED, InvoiceStatus.SENT, InvoiceStatus.REVISED, InvoiceStatus.RESENT ],
-            carrierOptions: InvoiceMgr.getCarriers(),
+            serviceOptions: ShipmentMgr.getServices(),
+            selectedShipment: null,
             visibleColumns: [ 'name', 'price'],
  				columns: [
         			{ name: 'name',  label: 'Item',  align: 'left',  field: 'name' },
@@ -95,6 +100,7 @@
 		computed: {	
          ...mapGetters('setting', ['getSettings']),
          ...mapGetters('user', ['getUser']),
+         ...mapGetters('shipment', ['getCreatedShipments']),
          isEdit() { return this.type == UI.EDIT },	
          userHtml() { 
             return this.invoiceToSubmit.user ? InvoiceMgr.getUserHtml(this.invoiceToSubmit, this.user) : ""
@@ -102,6 +108,16 @@
          paypalUserHtml() { 
             return this.invoiceToSubmit.user ? InvoiceMgr.getPaypalUserHtml(this.invoiceToSubmit) : ""
          },
+         shipmentExists() { return this.selectedShipment != null },
+         shipmentOptions() { 
+            const shipmentOptions = [ { label: "", value: null }]
+            for (var shipment of this.getCreatedShipments) {
+               console.log("shipmentOptions", shipment)
+               
+               shipmentOptions.push({ label: shipment.tracking, value: shipment }) 
+            }   
+            return shipmentOptions 
+         }, 
          canAdjustPrice() { return this.adjustableStatus.includes(this.invoiceToSubmit.status) },
          isShipped() { return InvoiceMgr.isShipped(this.invoiceToSubmit) },	
          subtotal() { return dollars(this.invoiceToSubmit.subTotal) },
@@ -113,18 +129,36 @@
 		methods: {
 			...mapActions('invoice', ['createInvoice', 'setInvoice']),
 			...mapActions('item', ['updateItem']),
+			...mapActions('shipment', ['updateShipment']),
 			submitForm() {
 				this.persistInvoice()
             this.$emit('close')
 			},
+         onShipmentSet() { 
+            if (this.selectedShipment.value) {
+               console.log("onShipmentSet", this.selectedShipment.value.trackingLink)
+               this.invoiceToSubmit.shipping.shipmentId = this.selectedShipment.value.id 
+               this.invoiceToSubmit.shipping.service    = this.selectedShipment.value.service 
+               this.invoiceToSubmit.shipping.tracking   = this.selectedShipment.value.tracking   
+               this.invoiceToSubmit.shipping.trackingLink = this.selectedShipment.value.trackingLink  
+            }
+            else { 
+               this.selectedShipment = null 
+               this.invoiceToSubmit.shipping.shipmentId = null
+               this.invoiceToSubmit.shipping.service    = null 
+               this.invoiceToSubmit.shipping.tracking   = null   
+               this.invoiceToSubmit.shipping.trackingLink = null   
+            } 
+         },
 			persistInvoice() {
             // console.log("persistInvoice", this.invoiceToSubmit)
             if (this.isEdit) { 
                if (this.invoiceToSubmit.status != this.invoice.status ||
                    this.invoiceToSubmit.shipping.shippingCharge != this.invoice.shipping.shippingCharge ||
-                   this.invoiceToSubmit.priceAdjustment != this.invoice.priceAdjustment ||
-                   this.invoiceToSubmit.carrier != this.invoice.carrier ||
-                   this.invoiceToSubmit.tracking != this.invoice.tracking ) 
+                   this.invoiceToSubmit.priceAdjustment     != this.invoice.priceAdjustment ||
+                   this.invoiceToSubmit.shipping.carrier    != this.invoice.shipping.carrier ||
+                   this.invoiceToSubmit.shipping.shipmentId != this.invoice.shipping.shipmentId || 
+                   this.invoiceToSubmit.shipping.tracking   != this.invoice.shipping.tracking ) 
                {
                   const processedDate = new Date()
                   if ((this.invoiceToSubmit.shipping.shippingCharge != this.invoice.shipping.shippingCharge) ||
@@ -146,7 +180,20 @@
                   }
 
                   InvoiceMgr.finalize(this.invoiceToSubmit, this.user, this.getSettings)
+                  console.log("Updating invoice")
                   this.setInvoice(this.invoiceToSubmit)
+                  
+                  // update shipment if a new one has been attached to invoice
+                  if (this.selectedShipment && (this.selectedShipment.value.id != this.invoice.shipping.shipmentId)) {
+                     console.log("Adding shipment " + this.selectedShipment.value.id + " to invoice " + this.invoiceToSubmit.id)
+                     this.updateShip(this.selectedShipment.value.id, ShipmentStatus.ADDED_TO_INVOICE, this.invoiceToSubmit.id)
+                  }
+
+                  // reset the previous shipment if it was changed   
+                  if (this.invoice.shipping.shipmentId && 
+                      (!this.selectedShipment || this.selectedShipment.value.id != this.invoice.shipping.shipmentId)) {
+                     this.updateShip(this.invoice.shipping.shipmentId, ShipmentStatus.CREATED, null)
+                  }
                }
             }
             else { 
@@ -158,13 +205,22 @@
             }
 			},
          addHistory(date, status) { this.invoiceToSubmit.history.push({ date: date, status: status }) },
+         updateShip(id, status, invoiceId) { this.updateShipment({ id: id, status: status, invoiceId: invoiceId }) },
       },
 		created() {
          // slight delay because param update propagating as modal being popped up
          setTimeout(() => { 
             if (this.isEdit) {
+               // todo - verify other deep copies
                this.invoiceToSubmit = Object.assign({}, this.invoice) 
-               // console.log("Editing invoiceToSubmit", this.invoiceToSubmit)
+               this.invoiceToSubmit.shipping = Object.assign({}, this.invoice.shipping) 
+
+               if (this.invoiceToSubmit.shipping.shipmentId) {
+                  this.selectedShipment = { 
+                     label: this.invoiceToSubmit.shipping.tracking, 
+                     value: { id: this.invoiceToSubmit.shipping.shipmentId } 
+                  }
+               }
             }
             else {
                this.addHistory(this.invoiceToSubmit.createdDate, InvoiceStatus.CREATED)

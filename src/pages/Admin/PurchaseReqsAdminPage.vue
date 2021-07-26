@@ -1,10 +1,13 @@
 <template>
   <q-page>
-      <div class="q-pt-md q-pl-md text-h6">Purchase Requests - {{ item.name }}</div>
+      <div class="q-pt-md q-pl-md text-h6">
+         Purchase Requests - {{ item.name }}
+         <q-btn v-if="canHoldItem" @click="holdItem()" label="Hold" size="sm" color="primary" dense/>   
+      </div>
 		<div class="row">
          <div class="q-pa-sm" :class="'width: ' + itemDivWidth">
             <item :item="item" :displayType="displayType" class="q-pa-sm col-2"/>
-         </div>
+         </div>        
          <div class="q-pa-sm col">
             <q-table :data="reqs" :columns="columns" :visible-columns="visibleColumns" row-key="name" 
                :filter="tableDataFilter" :pagination.sync="pagination" :hide-pagination="hidePagination"
@@ -16,7 +19,7 @@
     				   {{ userEmail(props.row.userId) }}
   				   </q-td>
                <q-td slot="body-cell-status" slot-scope="props" :props="props"> 
-                  <q-btn v-if="itemCanBeAccepted" @click="acceptReq(props.row)" label="Accept" size="sm" color="primary" dense/>   
+                  <q-btn v-if="canAcceptRequest" @click="acceptReq(props.row)" label="Accept" size="sm" color="primary" dense/>   
                   <span v-else-if="requestedIsAccepted(props.row.actionId)">Accepted</span>   
                   <span v-else-if="acceptedRequestId == props.row.actionId">Accepting</span>   
                </q-td>
@@ -31,7 +34,7 @@
 	import { date } from 'quasar'
    import { mapGetters, mapActions } from 'vuex'
    import { UserMgr } from 'src/managers/UserMgr'
-   import { ItemMgr } from 'src/managers/ItemMgr'
+   import { ItemMgr, ItemStatus } from 'src/managers/ItemMgr'
    import { ItemDisplayType } from 'src/utils/Constants.js'
    
 	export default {
@@ -56,12 +59,18 @@
 			...mapGetters('item', ['getItem']),
          ...mapGetters('user', ['getUsers']),
          item() { return this.getItem(this.itemId) },
-         itemCanBeAccepted() {             
+         canHoldItem() { return ItemMgr.isAvailable(this.item) || ItemMgr.isRequested(this.item) },
+         canAcceptRequest() {        
             const requested = ItemMgr.isRequested(this.item)
+            
+            // return to calling page if an accept was submitted, and an item is no longer requested
             if (!requested && this.returnRoute && this.acceptedRequestId) { 
-               this.$router.push({ name: this.returnRoute }) // an accept was submitted, and an item is no longer requested 
+               this.$router.push({ name: this.returnRoute })
             }
-            return requested && (this.acceptedRequestId == null) // can accept if item requested and a req not already accepted
+
+            // can accept req if item is requested or on hold w/o an accepted request, and a req not already accepted
+            const onHoldWithNoAcceptedReq = ItemMgr.isHold(this.item) && !this.item.acceptedPurchaseReqId
+            return (requested || onHoldWithNoAcceptedReq) && (this.acceptedRequestId == null) 
          },
          imageW() { return "width: " + (this.item.isHorizontal ? this.hImageWidth : this.vImageWidth) },	
          itemDivWidth() { return this.item.isHorizontal ? 200 : 350 },
@@ -74,6 +83,7 @@
       },
       methods: {
          ...mapActions('action', ['acceptPurchaseRequest']),
+         ...mapActions('item', ['updateItem']),
          requestedIsAccepted(actionId) { 
             if (this.item.acceptedPurchaseReqId != actionId ) { return false }
             this.acceptedRequestId = null
@@ -84,6 +94,7 @@
             const user = this.userIdToInfo.get(userId)
             return user ? user.email : ""
          },
+         holdItem() { this.updateItem({ id: this.itemId, status: ItemStatus.HOLD }) }, 
          acceptReq(purchaseReq) { 
             this.acceptedRequestId = purchaseReq.actionId
             this.acceptPurchaseRequest( {

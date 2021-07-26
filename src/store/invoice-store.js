@@ -30,7 +30,7 @@ const actions = {
       collection().doc(invoice.id).set(invoice)
    }),
    setInvoice: firestoreAction((context, invoice) => {
-      // console.log("setInvoice", invoice)
+      console.log("setInvoice", invoice)
       collection().doc(invoice.id).set(invoice)
    }),
    sendInvoice:   firestoreAction((context, id) => { collection().doc(id).update({ sendStatus: InvoiceSendStatus.SENDING }) }),

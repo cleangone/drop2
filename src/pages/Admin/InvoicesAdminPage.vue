@@ -12,38 +12,17 @@
 						<template v-slot:append><q-icon name="search"/></template>
 					</q-input>
             </template>
-            <template v-slot:header="props">
-               <q-tr :props="props">
-                  <q-th auto-width /> <!-- expand col -->
-                  <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                  <q-th auto-width /> <!-- actions col -->
-               </q-tr>
-            </template>
             <template v-slot:body="props">
                <q-tr :props="props">
-                  <q-td auto-width>
-                     <q-btn v-if="hasTracking(props.row)" size="xs" color="primary" round dense @click="props.expand = !props.expand" :icon="props.expand ? 'remove' : 'add'" />
-                  </q-td>
                   <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                     <invoice-td :invoice="props.row" :col="col" />
-                  </q-td>
-                  <q-td auto-width>                  
-                     <q-btn v-if="needToSend(props.row)"        @click="send(props.row.id)" label="Send"   :disabled="!acceptsEmail(props.row.userId)" size="xs" color="primary" dense/>   
-                     <q-btn v-else-if="needToResend(props.row)" @click="send(props.row.id)" label="Resend" :disabled="!acceptsEmail(props.row.userId)" size="xs" color="primary" dense/>
-                     <q-btn icon="edit" @click="editInvoice(props.row.id)" size="sm" color="primary" flat dense/>                 
+                     <span v-if="isActions(col)" >                  
+                        <q-btn v-if="needToSend(props.row)"        @click="send(props.row.id)" label="Send"   :disabled="!acceptsEmail(props.row.userId)" size="xs" color="primary" dense/>   
+                        <q-btn v-else-if="needToResend(props.row)" @click="send(props.row.id)" label="Resend" :disabled="!acceptsEmail(props.row.userId)" size="xs" color="primary" dense/>
+                        <q-btn icon="edit" @click="editInvoice(props.row.id)" size="sm" color="primary" flat dense/>                 
+                     </span>
+                     <invoice-td v-else :invoice="props.row" :col="col" />
                   </q-td>
                </q-tr>   
-               <template v-if="props.expand">
-                  <q-tr>
-                     <q-td colspan="2"/>
-                     <q-td class="text-left bg-grey-2" colspan="2">
-                        <a v-if="hasTrackingLink(props.row)" :href="trackingLink(props.row)" target=”_blank”>
-                           {{ props.row.carrier }} - {{ props.row.tracking }}
-                        </a>
-                        <span v-else>Tracking: {{ props.row.carrier }} - {{ props.row.tracking }}</span> 
-                     </q-td>
-                  </q-tr>
-               </template>
             </template>
          </q-table>
          <div style="height: 75px"/>
@@ -68,7 +47,7 @@
             showShipped: true,
 			   showEditModal: false,
 				tableDataFilter: '',
-            visibleColumns: ['userName', 'name', 'createdDate', 'total', 'status', 'sentDate'],
+            visibleColumns: ['userName', 'name', 'createdDate', 'total', 'status', 'sentDate', 'actions'],
  				columns: [
                { name: 'userName',    label: 'User',   align: 'left',   field: 'tempFullName', sortable: true },
 					{ name: 'name',        label: 'Name',   align: 'left',   field: 'name',         sortable: true },
@@ -78,6 +57,7 @@
 					{ name: 'status',      label: 'Status', align: 'center', field: 'status',       sortable: true },
                { name: 'sentDate',    label: 'Sent ' + localTimezone(), 
                                                        align: 'center', field: 'sentDate',     sortable: true, format: val => formatDateTimeOptYear(val) },
+               { name: 'actions' },
             ],
             pagination: { rowsPerPage: 30 },
             invoiceIdToEdit: '',
@@ -114,7 +94,8 @@
             this.invoiceIdToEdit = invoiceId
 				this.showEditModal = true
          },
-         hasTracking(invoice) { return InvoiceMgr.hasTracking(invoice) },
+         isActions(col) { return col.name == 'actions' },
+		   hasTracking(invoice) { return InvoiceMgr.hasTracking(invoice) },
 		   hasTrackingLink(invoice) { return InvoiceMgr.hasTrackingLink(invoice) },
 		   trackingLink(invoice) { return InvoiceMgr.getTrackingLink(invoice) }
 		},

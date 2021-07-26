@@ -8,15 +8,21 @@ import { date } from 'quasar'
 export function formatTodayOr_ddd_MMM_D_h_mm(inputDate) { 
    if (!inputDate) { return "" }
    const datetime = getDate(inputDate)
-   return (date.formatDate(new Date(), 'MM-DD-YYYY') == date.formatDate(datetime, 'MM-DD-YYYY')) ?
-      "Today, " + formatWithTz(datetime, "h:mm a") : 
-      formatWithTz(datetime, "ddd, MMM D, h:mm a")
+   return isToday(datetime) ? "Today, " + formatWithTz(datetime, "h:mm a") : formatWithTz(datetime, "ddd, MMM D, h:mm a")
 }
 
 export function formatDateTimeOptYear(inputDate) {
    if (!inputDate) { return "" }
    let datetime = getDate(inputDate)
    return date.formatDate(datetime, optYearFormat(datetime))
+}
+
+// h:mm:ss if today, date/time to min with optional year otherwise
+export function formatDateTimeScalingPrecision(inputDate) {
+   if (!inputDate) { return "" }
+   let datetime = getDate(inputDate)
+   let format = isToday(datetime) ? 'h:mm:ss a' : optYearFormat(datetime)
+   return date.formatDate(datetime, format)
 }
 
 export function formatDateTimeOptYearTz(inputDate) {
@@ -44,6 +50,7 @@ export function toMillis(inputDate) {
    return inputDate.seconds ? inputDate.seconds*1000 : inputDate
 }
 
+export function isToday(datetime) { return (date.formatDate(new Date(), 'MM-DD-YYYY') == date.formatDate(datetime, 'MM-DD-YYYY')) }   
 export function isFutureDate(timestamp) { return timestamp ? (timestamp.seconds*1000 > new Date().getTime()) : false }
 
 export function localTimezone() {
@@ -55,7 +62,6 @@ export function localTimezone() {
 }
 
 function optYearFormat(datetime) { return isThisYear(datetime) ? 'MMM D, h:mm a' : 'MMM D, YYYY h:mm a' }
-
 function formatOptYear(millis, format, yearFormat) {
    if (!millis) { return "" }
 

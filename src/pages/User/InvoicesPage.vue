@@ -43,14 +43,13 @@
 		data() {
 	  	   return {
 			   tableDataFilter: '',
-            visibleColumns: ['name', 'sentDate', 'total', 'status', 'tracking'],
+            visibleColumns: ['name', 'sentDate', 'total', 'status'],
  				columns: [
                { name: 'name',     label: 'Name',      align: 'left',   field: 'name',     sortable: true },
                { name: 'sentDate', label: 'Received ' + localTimezone(), 
                                                        align: 'center', field: 'sentDate', sortable: true, format: val => formatDateTimeOptYear(val) },
                { name: 'total',    label: 'Total',     align: 'right',  field: 'total',    sortable: true, format: val => dollars(val) },
 					{ name: 'status',   label: 'Status',    align: 'center', field: 'status',   sortable: true },
-               { name: 'tracking', label: 'Tracking',  align: 'center', field: 'tracking' },
             ],
             pagination: { rowsPerPage: 30 },
 			}

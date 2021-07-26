@@ -63,7 +63,7 @@ export class InvoiceMgr {
    static setUpdated(invoice) { invoice.status = InvoiceStatus.UPDATED }
 
    // todo - tracking has a lot of hardcoding
-   static hasTracking(invoice) { return invoice.shipping.carrier && invoice.shipping.tracking }
+   static hasTracking(invoice) { return invoice.shipping.service && invoice.shipping.tracking }
    static hasTrackingLink(invoice) { return invoice.shipping.trackingLink != null }
    static getTrackingLink(invoice) { return invoice.shipping.trackingLink }
    
@@ -105,15 +105,15 @@ export class InvoiceMgr {
       if (user.zip)     { invoice.user.address.zip = user.zip }
       if (user.country) { invoice.user.address.country = user.country }
 
-      if (invoice.shipping.tracking && InvoiceMgr.isUspsPriority(invoice)) {
-         invoice.shipping.trackingLink = 
-            "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + invoice.shipping.tracking 
-      }
-      else { invoice.shipping.trackingLink = null }
+      // if (invoice.shipping.tracking && InvoiceMgr.isUspsPriority(invoice)) {
+      //    invoice.shipping.trackingLink = 
+      //       "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + invoice.shipping.tracking 
+      // }
+      // else { invoice.shipping.trackingLink = null }
    }
 
    static getUserHtml(invoice) { 
-      console.log("getUserHtml", invoice)
+      // console.log("getUserHtml", invoice)
       const address = invoice.user.address
 
       const addressHtml = address.usePayPalAddress ? "" : 
@@ -184,17 +184,7 @@ export class InvoiceMgr {
       
       let note = settings.invoiceNote
       if (InvoiceMgr.isPaid(invoice)) { note = "" }
-      else if (InvoiceMgr.isShipped(invoice)) {
-         note = "Items shipped. "
-         if (invoice.shipping.trackingLink) { 
-            note += a(invoice.shipping.carrier + " - " + invoice.shipping.tracking, invoice.shipping.trackingLink) 
-         }
-         else {
-            if (invoice.shipping.carrier) { note += invoice.shipping.carrier }
-            if (invoice.shipping.carrier && invoice.shipping.tracking) { note += ", " }
-            if (invoice.shipping.tracking) { note += "Tracking: " + invoice.shipping.tracking }
-         }
-      }
+      else if (InvoiceMgr.isShipped(invoice)) { note = "Items shipped. " + InvoiceMgr.getTrackingLinkHtml(invoice) }
       htmlSections.note = p(note)
 
       return htmlSections.date + 
@@ -208,6 +198,26 @@ export class InvoiceMgr {
          htmlSections.note
    }
 
+   static getTrackingHtml(invoice, settings) { 
+      const itemNames = []
+      for (var item of invoice.items) {
+         itemNames.push(item.name)
+      }
+      
+      return itemNames.join("br()")  + hr() + p(InvoiceMgr.getTrackingLinkHtml(invoice))
+   }
+
+   static getTrackingLinkHtml(invoice) { 
+      console.log("invoice.shipping.trackingLink", invoice.shipping.trackingLink)
+      if (invoice.shipping.trackingLink) { 
+         return a(invoice.shipping.carrier + " - " + invoice.shipping.tracking, invoice.shipping.trackingLink)
+      }
+
+      let tracking = invoice.shipping.carrier ? invoice.shipping.carrier : ""
+      if (invoice.shipping.carrier && invoice.shipping.tracking) { tracking += ", " }
+      if (invoice.shipping.tracking) { tracking += "Tracking: " + invoice.shipping.tracking }   
+      return tracking
+   }
 }
 
 function right()                   { return "align=right" }

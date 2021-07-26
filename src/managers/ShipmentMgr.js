@@ -23,6 +23,7 @@ export const ShipmentCarrier = {
 export const ShipmentService = {
    USPS_PRIORITY: 'USPS Priority',
    USPS_INSURED:  'USPS Insured Domestic',
+   FEDEX: 'FedEx',
 }
 
 /*
@@ -44,6 +45,8 @@ Insured Mail - Domestic: VJ788361252US
 */
 
 export class ShipmentMgr {
+   static getServices() { return [ ShipmentService.USPS_PRIORITY, ShipmentService.USPS_INSURED, ShipmentService.FEDEX ] }
+   
    static createShipment(barcode, carrier) {
      const shipment = { 
          status: ShipmentStatus.CREATED,
