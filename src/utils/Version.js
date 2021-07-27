@@ -1,5 +1,6 @@
 
 export const Versions = [
+   "v2.4.4  - 7/26/21",  // Rename Item.userUpdatedDate to lastBidReqDate
    "v2.4.3  - 7/18/21",  // Integrate Shipment and Invoice. Mark item Hold without accepting a req. Move Bindings out of Layout
    "v2.4.2  - 7/11/21",  // Initial add of Shipment object, which replaces qr/barcode
    "v2.4.1  - 6/29/21",  // Integrate scanned barcodes for USPS (receipt QR only for survey)

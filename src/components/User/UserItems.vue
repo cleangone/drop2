@@ -61,7 +61,8 @@
             }
 
             const sortedItems = [...this.displayItems]
-            sortedItems.sort((a, b) => (a.userUpdatedDate > b.userUpdatedDate) ? -1 : 1)
+            ItemMgr.sortByDate(sortedItems)
+
             return SessionMgr.setDisplayItems(sortedItems)
          },
       },

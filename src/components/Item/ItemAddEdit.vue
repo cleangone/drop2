@@ -97,11 +97,8 @@
                this.itemToSubmit.bidderIds = []
                this.itemToSubmit.currBid = null,
                this.itemToSubmit.prevBids = null,
+               this.itemToSubmit.lastBidReqDate = 0
                this.itemToSubmit.dropDoneDate = 0 
-
-               // old items do not have sortedCreateDate
-               this.itemToSubmit.userUpdatedDate = this.itemToSubmit.sortedCreateDate ? 
-                  this.itemToSubmit.sortedCreateDate : this.itemToSubmit.createdDate 
             }
             if (ItemMgr.isAvailable(this.itemToSubmit)) { this.itemToSubmit.availableDate = new Date().getTime() }   
 

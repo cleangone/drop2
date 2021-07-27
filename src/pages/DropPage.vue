@@ -82,7 +82,7 @@
          sortedItems() { 
             const sortedItems = [...this.displayItems]
             if (ToggleContainerMgr.isSortItemsByDate(this.sortItemsToggleContainer)) { 
-               sortedItems.sort((a, b) => (a.userUpdatedDate > b.userUpdatedDate) ? -1 : 1)
+               ItemMgr.sortByDate(sortedItems)
             }
             else if (ToggleContainerMgr.isSortItemsByPriceHighest(this.sortItemsToggleContainer)) { 
                sortedItems.sort((a, b) => (a.startPrice > b.startPrice) ? -1 : 1)

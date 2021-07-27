@@ -21,7 +21,7 @@
       prevBids [ currBid obj ]
       createdDate
       sortedCreateDate - createdDate adjusted by millis so drop items line up by sortName when sorted by date
-      userUpdatedDate
+      lastBidReqDate
       dropDoneDate
       primaryImage { baseName, isHorizontal, url, filePath, thumbUrl, thumbFilePath }
       images [ Image Obj ]
@@ -102,7 +102,19 @@ export class ItemMgr {
    }
 
    static sortBySortName(items) { return items.sort((a, b) => (a.sortName < b.sortName) ? -1 : 1) }
-            
+   
+   static sortByDate(items) { 
+      return items.sort(function(a, b) {
+         // old items do not have sortedCreateDate
+         const createDateA = a.sortedCreateDate ? a.sortedCreateDate : a.createdDate 
+         const createDateB = b.sortedCreateDate ? b.sortedCreateDate : b.createdDate 
+         
+         const sortDateA = a.lastBidReqDate ? a.lastBidReqDate : createDateA 
+         const sortDateB = b.lastBidReqDate ? b.lastBidReqDate : createDateB 
+         return sortDateB - sortDateA
+      })
+   }
+   
    static isRequestedByUser(item, userId) { 
       if (ItemMgr.isRequested(item)) { 
          for (var purchaseReq of item.purchaseReqs) {

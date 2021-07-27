@@ -2,17 +2,16 @@
   <div>     
       <div class="row q-pl-sm q-pr-sm" :class="purple">
          <span class="col text-grey-10" color="grey-10" :class="red">
-			   <q-checkbox v-model="showCols.show.sortName"  label="Sort Name"  @input="showColsChecked()" size="xs" dense />
+			   <q-checkbox v-model="showCols.sortName" label="Sort Name" @input="showColsChecked()" size="xs" dense />
             <q-checkbox v-if="dropId"     
-                        v-model="showCols.show.category"  label="Artist"     @input="showColsChecked('category')" size="xs" dense class="q-ml-sm" />
+                        v-model="showCols.category" label="Artist"    @input="showColsChecked('category')" size="xs" dense class="q-ml-sm" />
             <q-checkbox v-if="categoryId" 
-                        v-model="showCols.show.drop"      label="Drop"       @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.show.tags"      label="Tags"       @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.show.saleType"  label="Sale Type"  @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.show.buyer"     label="Buyer"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.show.bidReq"   :label=bidReqHeader @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
-            <q-checkbox v-model="showCols.show.lastBidReqDate" 
-                                                 :label=lastBidReqDateHeader @input="showColsChecked('lastBidReqDate')" size="xs" dense class="q-ml-sm" />
+                        v-model="showCols.drop"     label="Drop"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.tags"     label="Tags"      @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.saleType" label="Sale Type" @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.buyer"    label="Buyer"     @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.bidReq"   label="Requsts"   @input="showColsChecked()" size="xs" dense class="q-ml-sm" />
+            <q-checkbox v-model="showCols.lastBidReqDate" label="Last Request" @input="showColsChecked('lastBidReqDate')" size="xs" dense class="q-ml-sm" />
          </span>
          <span class="col text-grey-10 text-right" color="grey-10" :class="red">
 			   <q-checkbox v-model="showItems.available" label="Available" @input="showItemsChecked()" size="xs" dense />
@@ -31,11 +30,6 @@
 						<template v-slot:append><q-icon name="search"/></template>
 					</q-input>
 				</template>
-            <template v-slot:header-cell-name><q-th>{{ nameHeader }}</q-th></template>
-            <template v-slot:header-cell-price><q-th>{{ priceHeader }}</q-th></template>
-            <template v-slot:header-cell-userDate><q-th>{{ userDateHeader }}</q-th></template>
-            <template v-slot:header-cell-bidReq><q-th>{{ bidReqHeader }}</q-th></template>
-            <template v-slot:header-cell-lastBidReqDate><q-th>{{ lastBidReqDateHeader }}</q-th></template>
             <q-td slot="body-cell-name" slot-scope="props" :props="props"> 
                {{ props.row.name + sortNameText(props.row.sortName) }}
             </q-td>
@@ -118,18 +112,21 @@
 				itemIdToEdit: '',
             tableDataFilter: '',
             selectedRowItems: [],
-				displayColumns: [ 'name', 'price', 'status', 'actions'],
+				defaultVisibleColumns: [ 'name', 'status', 'actions'],
  				columns: [
         			{ name: 'id', field: 'id' },
-				 	{ name: 'name',                         align: 'left',                        sortable: true },
+				 	{ name: 'name',     label: 'Name',      align: 'left',   field: 'sortName',   sortable: true },
 				 	{ name: 'category', label: 'Artist',    align: 'center', field: 'category',   sortable: true, format: val => val ? val.name : "" },
 				 	{ name: 'drop',     label: 'Drop',      align: 'center', field: 'tempDrop',   sortable: true },
 				 	{ name: 'tags',     label: 'Tags',      align: 'center', field: 'tempTags',   sortable: true },
 				 	{ name: 'saleType', label: 'Sale Type', align: 'center', field: 'saleType',   sortable: true },
 					{ name: 'buyerId',  label: 'Buyer',     align: 'left',   field: 'buyerId',    sortable: true, format: val => this.userFullName(val) },
-               { name: 'price',                        align: 'right',  field: 'startPrice', sortable: true },
-					{ name: 'bidReq',                       align: 'center',                      sortable: true },
-					{ name: 'lastBidReqDate',               align: 'center', field: 'userUpdatedDate', sortable: true, format: val => formatDateTimeScalingPrecision(val) },
+               { name: 'price',    label: 'Price',     align: 'right',  field: 'startPrice', sortable: true },
+					{ name: 'startFinalPrice', label: 'Start/Final Price', 
+                                                       align: 'right',  field: 'startPrice', sortable: true },
+					{ name: 'bidReq',   label: 'Requests',  align: 'center',                      sortable: false },
+					{ name: 'lastBidReqDate', label:'Last Request', 
+                                                       align: 'center', field: 'lastBidReqDate', sortable: true, format: val => formatDateTimeScalingPrecision(val) },
 					{ name: 'status',   label: 'Status',    align: 'center', field: 'status',     sortable: true },
 					{ name: 'actions' }
             ],
@@ -143,14 +140,16 @@
          ...mapGetters('user', ['getUserLookup']),
          ...mapGetters('color', Colors),
 			visibleColumns() { 
-            const columns = [...this.displayColumns]
-            if (this.categoryId && this.showCols.show.drop)     { columns.push('drop') } 
-            if (this.dropId     && this.showCols.show.category) { columns.push('category') } 
-            if (this.showCols.show.tags)     { columns.push('tags') }
-            if (this.showCols.show.saleType) { columns.push('saleType') }
-            if (this.showCols.show.buyer)    { columns.push('buyerId') }
-            if (this.showCols.show.bidReq)   { columns.push('bidReq') }
-            if (this.showCols.show.lastBidReqDate)  { columns.push('lastBidReqDate') }
+            const columns = [...this.defaultVisibleColumns]
+            columns.push(this.hasBidOrDropItems ? 'startFinalPrice' : 'price')
+            if (this.categoryId && this.showCols.drop)     { columns.push('drop') } 
+            if (this.dropId     && this.showCols.category) { columns.push('category') } 
+            if (this.showCols.tags)     { columns.push('tags') }
+            if (this.showCols.tags)     { columns.push('tags') }
+            if (this.showCols.saleType) { columns.push('saleType') }
+            if (this.showCols.buyer)    { columns.push('buyerId') }
+            if (this.showCols.bidReq)   { columns.push('bidReq') }
+            if (this.showCols.lastBidReqDate)  { columns.push('lastBidReqDate') }
             return columns
          },
          hasBidOrDropItems() { 
@@ -159,18 +158,8 @@
             }
             return false 
          },
-         nameHeader()     { return this.showCols.show.sortName ? 'Name (Sort Name)' : 'Name' },
-         priceHeader()    { return this.hasBidOrDropItems ? 'Start/Final Price' : 'Price' },
-         userDateHeader() { return (this.hasBidOrDropItems ? 'Last Bid/Req ' : 'Last Req ') + localTimezone() },
-         bidReqHeader()   { return this.hasBidOrDropItems ? 'Bid/Req' : 'Requests'},
-         lastBidReqDateHeader() { return this.hasBidOrDropItems ? 'Last Bid/Req' : 'Last Request'},
          tableItems() { 
             let copies = []
-            let showCategory = false // show artist initially if diff values
-            let commonCategoryId = null
-            let showSaleType = false // show saleType initially if diff values
-            let commonSaleType = null
-            let showLastBidReqDate = false // show lastBidReqDate initially if any item has a date that is today
             this.items.forEach(item => { 
                const copy = Object.assign({}, item)
                copy.tempName = copy.sortName + " " + copy.name // sort by sortName and be able to filter by name
@@ -184,26 +173,9 @@
                }
                copy.tempTags = tagNames.join(', ')
 
-               if (this.showCols.clicked.category == null) {
-                  console.log("commonCategory", commonCategoryId)
-                 if (commonCategoryId == null) { commonCategoryId = copy.category.id }
-                 else if (commonCategoryId != copy.category.id) { showCategory = true }
-               }
-               if (this.showCols.clicked.saleType == null) {
-                 if (commonSaleType == null) { commonSaleType = copy.saleType }
-                 else if (commonSaleType != copy.saleType) { showSaleType = true }
-               }
-               if (this.showCols.clicked.lastBidReqDate == null) {
-                 if (!isToday(copy.userUpdatedDate)) { showLastBidReqDate = true }
-               }
-
                copies.push(copy) 
             })
             
-            if (this.showCols.clicked.category == null) { this.showCols.show.category = showCategory }
-            if (this.showCols.clicked.saleType == null) { this.showCols.show.saleType = showSaleType }
-            if (this.showCols.clicked.lastBidReqDate == null) { this.showCols.show.lastBidReqDate = showLastBidReqDate }
-
             return ItemMgr.sortBySortName(copies)
          },
          displayItems() { 
@@ -257,7 +229,7 @@
 				this.showEditModal = true
          },
          sortNameText(sortName) { 
-            return this.showCols.show.sortName && sortName && sortName.length ? " (" + sortName + ")" : ""
+            return this.showCols.sortName && sortName && sortName.length ? " (" + sortName + ")" : ""
          },
          priceText(row) { 
             let text = dollars(row.startPrice) 
@@ -280,20 +252,15 @@
             this.showQuickEditModal = false
          },
          editImages(itemId) { this.$router.push("/admin/images/" + itemId) },
-         showColsChecked(colName) { 
-            if (colName) { this.showCols.clicked[colName] = true }
-            SessionStorage.set(SHOW_COLS, this.showCols) 
-         },
+         showColsChecked() { SessionStorage.set(SHOW_COLS, this.showCols) },
          showItemsChecked() { SessionStorage.set(SHOW_ITEMS, this.showItems) },
       },
       created() {
          this.showCols = SessionStorage.getItem(SHOW_COLS)    
          if (!this.showCols) { 
             this.showCols = { 
-               show: {
-                  category: true, drop: true, tags: true, saleType: true, 
-                  buyer: true, bidReq: true, lastBidReqDate: true},
-               clicked: {}
+               sortName: false, category: true, drop: true, tags: true, saleType: true, 
+               buyer: true, bidReq: true, lastBidReqDate: true
             } 
          }
          this.showItems = SessionStorage.getItem(SHOW_ITEMS)    

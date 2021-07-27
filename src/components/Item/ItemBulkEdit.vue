@@ -91,11 +91,8 @@
                      update.bidderIds = []
                      update.currBid = null,
                      update.prevBids = null,
+                     update.lastBidReqDate = 0
                      update.dropDoneDate = 0 
-                     
-                     // old items do not have sortedCreateDate
-                     update.userUpdatedDate = item.sortedCreateDate ? 
-                        item.sortedCreateDate : item.createdDate 
                   }
                   if (ItemMgr.isAvailable(update)) { update.availableDate = new Date().getTime() }
                }

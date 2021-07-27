@@ -34,7 +34,7 @@
         			{ name: 'name',  label: 'Name',  align: 'left',   field: 'name',     sortable: true },
 				 	{ name: 'buyer', label: 'Buyer', align: 'left',   field: 'buyerId',  sortable: true, format: val => this.userFullName(val) },
 					{ name: 'date',  label: 'Date ' + localTimezone(), 
-                                                align: 'center', field: 'userUpdatedDate', sortable: true, format: val => formatDateTimeOptYear(val) },
+                                                align: 'center', field: 'lastBidReqDate', sortable: true, format: val => formatDateTimeOptYear(val) },
 					{ name: 'drop',  label: 'Drop',  align: 'center',                    sortable: true },
 				 	{ name: 'price', label: 'Price', align: 'right',  field: 'buyPrice', sortable: true, format: val => dollars(val) }, 
 				],
